@@ -11,16 +11,36 @@ const db = new sqlite.Database('life_in_ancient_greece.db', (err) => {
 }
 );
 
-export const getUserById = (id) => {
+export const getUserById = (uid) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT * FROM USER WHERE UID = ?';
+    db.get(sql, [uid], (err, row) => {
+      if (err) reject(err);
+      else if (!row) resolve(false);
+      else resolve({ id: row.UID, username: row.Username });
+    });
+  });
+};
+
+export const getUser = (username, password) => {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM USERS WHERE UID = ?';
-        db.get(sql, [id], (err, row) => {
+        const sql = 'SELECT * FROM USER WHERE Username = ?';
+        db.get(sql, [username], (err, row) => {
             if (err) {
                 reject(err);
             } else if (row === undefined) {
-                resolve({error: "User not available, check the inserted id."});
+                resolve(false); 
             } else {
-                resolve(row);
+                console.log("User found:", row);
+                // Check password
+                const user = {id: row.UID, username: row.Username};
+                crypto.scrypt(password, row.Salt, 32, function(err, hashedPassword) {
+                if (err) reject(err);
+                if(!crypto.timingSafeEqual(Buffer.from(row.Password, 'hex'), hashedPassword))
+                    resolve(false);
+                else
+                    resolve(user);
+                });
             }
         });
     });
@@ -123,3 +143,19 @@ export const drawCard = (mid, cardId) => {
         
     });
 }
+
+export const getCurrentMatchByUserId = (uid) => {
+  return new Promise((resolve, reject) => {
+    // Retrieve the most recent match for the user
+    const sql = 'SELECT * FROM MATCH WHERE UID = ? ORDER BY Timestamp DESC LIMIT 1';
+    db.get(sql, [uid], (err, row) => {
+      if (err) {
+        reject(err);
+      } else if (!row) {
+        resolve(null);
+      } else {
+        resolve(row);
+      }
+    });
+  });
+};

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router';
 import { Button, Container, Navbar } from 'react-bootstrap';
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import { LogoutButton } from './authComponents.jsx';
 
 const Navhead = (props) => {
     const[darkMode, setDarkMode] = useState(true);
@@ -49,6 +50,19 @@ const Navhead = (props) => {
                             </li>
                         </ul>
                     </div>
+
+                    {props.loggedIn ? 
+                        <>
+                            <span className="navbar-text me-2">
+                                Hi {props.user.username}!
+                            </span>
+                            <LogoutButton logout={props.handleLogout} darkMode={darkMode} /> 
+                        </>
+                    :
+                        <Link to='/login' className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-dark'}`}>
+                            Login
+                        </Link>
+                    }
 
 
                 </div>
