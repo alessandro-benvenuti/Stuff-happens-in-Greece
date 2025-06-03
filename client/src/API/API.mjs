@@ -1,6 +1,6 @@
 import {Card, User, Match} from '../models/AGmodels.mjs';
 
-const SERVER_URL = 'http://localhost:3001';
+export const SERVER_URL = 'http://localhost:3001';
 
 // Function to get all cards from the server
 export const getAllCards = async () => {
@@ -27,13 +27,29 @@ export const getCurrentMatch = async () => {
             throw new Error('Internal server error');
         }
         const data = await response.json();
-        return new Match(data.MID, data.UID, data.Timestamp, data.C1, data.C2, data.C3, data.C4, data.C5, data.C6, data.C7, data.C8, data.W4, data.W5, data.W6, data.W7, data.W8);
+        return new Match(data.MID, data.UID, data.Timestamp, data.cards)
     } catch (error) {
         console.error('Error fetching current match:', error);
         throw error;
     }
 };
 
+export const drawCard = async (matchId) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/matches/${matchId}`, {
+      method: 'PUT',
+      credentials: 'include'
+    });
+    if (!response.ok) {
+      throw new Error('Internal server error');
+    }
+    const data = await response.json();
+    return new Match(data.MID, data.UID, data.Timestamp, data.cards);
+  } catch (error) {
+    console.error('Error drawing card:', error);
+    throw error;
+  }
+}
 
 // login
 const logIn = async (credentials) => {
@@ -84,6 +100,7 @@ const API = {
     logIn,
     getUserInfo,
     logOut,
-    getCurrentMatch
+    getCurrentMatch,
+    drawCard
 };
 export default API;

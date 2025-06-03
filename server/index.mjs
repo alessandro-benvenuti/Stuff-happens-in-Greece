@@ -16,12 +16,23 @@ import {
   createMatch,
   getMatchById,
   drawCard,
-  getCurrentMatchByUserId
+  getCurrentMatchByUserId,
+  removeC4,
+  removeC5,
+  removeC6,
+  removeC7,
+  removeC8,
+  updateMatchWin,
+  formatMatch
 } from './dao.mjs';
 
 // init express
 const app = new express();
 const port = 3001;
+
+// static files
+app.use('/images', express.static('public/images'));
+
 
 const corsOptions = {
   origin: 'http://localhost:5173',
@@ -115,6 +126,7 @@ app.get('/api/cards/:id', async (req, res) => {
   }
 });
 
+/*
 app.post('/api/matches', isLoggedIn, async (req, res) => {
   const { uid } = req.user.id;
   const cards = [];
@@ -162,8 +174,9 @@ app.post('/api/matches', isLoggedIn, async (req, res) => {
     res.status(500).send('Error creating match');
   }
 });
+*/
 
-app.put('/api/matches/:id', async (req, res) => {
+app.put('/api/matches/:id', isLoggedIn, async (req, res) => {
   const matchId = req.params.id;
 
   const match = await getMatchById(matchId);
@@ -190,28 +203,102 @@ app.put('/api/matches/:id', async (req, res) => {
   }
 
   try{
-    const drawnCard = await drawCard(matchId, randoomCard.CID);
-    if (drawnCard.error) {
-      return res.status(400).send(drawnCard.error);
+    const match = await drawCard(matchId, randoomCard.CID);
+    if (match.error) {
+      return res.status(400).send(match.error);
     }
-    res.status(200).json(drawnCard);
+    res.status(200).json(match);
   } catch (error) {
     console.error('Error drawing card:', error);
     res.status(500).send('Error drawing card');
   }
 });
 
-// Get the current match for the authenticated user
+// Searches if there is a current match for the user, otherwise it creates a new one
 app.get('/api/matches/current', isLoggedIn, async (req, res) => {
   try {
     // req.user.id contains the ID of the authenticated user
     const userId = req.user.id;
-    // Retrieve the most recent (or "current") match for the user
+    // Retrieve the current match for the user
     const match = await getCurrentMatchByUserId(userId);
-    if (!match) {
-      return res.status(404).json({ error: 'No current match found' });
+    if (!match || match == null) {
+      // if no match is found, create a new one
+      const cards = [];
+
+
+      // Validate UID
+      if (!userId) {
+        return res.status(400).send('Invalid userId');
+      }
+      try {
+        const user = await getUserById(userId);
+        if (!user) {
+          return res.status(404).send('User not found');
+        }
+      }
+      catch (error) {
+        console.error('Error retrieving user:', error);
+        return res.status(500).send('Error retrieving user');
+      }
+
+      
+      // timestamp
+      const timestamp = dayjs().toISOString();
+
+
+
+      // get 3 random cards from the database
+      try {
+        const allCards = await getAllCards();
+        for (let i = 0; i < 3; i++) {
+          const randomIndex = Math.floor(Math.random() * allCards.length);
+          if (cards.includes(allCards[randomIndex])) {
+            i--; // If the card is already selected, decrement i to try again
+            continue;
+          }
+          cards.push(allCards[randomIndex]);
+        }
+      } catch (error) {
+        console.error('Error retrieving cards:', error);
+        return res.status(500).send('Error retrieving cards');
+      }
+
+      try {
+        const match = await createMatch(userId, timestamp, cards[0].CID, cards[1].CID, cards[2].CID);
+        console.log('New match created:', match);
+        res.status(201).json(await formatMatch(match));
+      } catch (error) {
+        console.error('Error creating match:', error);
+        res.status(500).send('Error creating match');
+      }
+    
     }
-    res.json(match);
+    else{
+      // if a match is found, return it after making sure everything is ok
+      // chech that if as card exists than its rund is either won or lost
+      if(match.C4 != null && match.W4 == null){
+        // we need to remove the card from the match
+        await removeC4(match.MID);
+      }
+      if(match.C5 != null && match.W5 == null){
+        // we need to remove the card from the match
+        await removeC5(match.MID);
+      }
+      if(match.C6 != null && match.W6 == null){
+        // we need to remove the card from the match
+        await removeC6(match.MID);
+      }
+      if(match.C7 != null && match.W7 == null){
+        // we need to remove the card from the match
+        await removeC7(match.MID);
+      }
+      if(match.C8 != null && match.W8 == null){
+        // we need to remove the card from the match
+        await removeC8(match.MID);
+      }
+      console.log('Current match found:', await formatMatch(match));
+      res.json(await formatMatch(match));
+    }
   } catch (error) {
     console.error('Error retrieving current match:', error);
     res.status(500).json({ error: 'Error retrieving current match' });

@@ -88,7 +88,7 @@ function App() {
         <Route path="/" element={<Homepage />} />
         <Route path="/cards" element={<Cardpage cards={cards} />} />
         <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm handleLogin={handleLogin} />} />
-        <Route path="/match/current" element={loggedIn ? <MatchPage /> : <Navigate replace to='/' />} />
+        <Route path="/match/current" element={loggedIn ? <MatchPage cards={cards} /> : <Navigate replace to='/' />} />
       </Routes>
       
     </>

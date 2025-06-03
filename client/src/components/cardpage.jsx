@@ -27,7 +27,7 @@ const Cardpage = (props) => {
 
 function displayCard(card) {
     return (
-        <div className="card" style={{ width: '18rem' }} key={card.CID}>
+        <div className="card" key={card.CID}>
             <img src={card.Picture} className="card-img-top" />
             <div className="card-body">
                 <h5 className="card-title">{card.Name}</h5>
@@ -37,4 +37,4 @@ function displayCard(card) {
     );
 }
 
-export default Cardpage
+export default { Cardpage, displayCard };

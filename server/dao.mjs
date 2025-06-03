@@ -81,7 +81,12 @@ export const createMatch = (uid, timestamp, card1, card2, card3) => {
             if (err) {
                 reject(err);
             } else {
-                resolve({ matchId: matchId });
+                // retrieve the match just created
+                const selectSql = 'SELECT * FROM MATCH WHERE MID = ?';
+                db.get(selectSql, [this.lastID], (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row);
+                });
             }
         });
     });
@@ -100,6 +105,78 @@ export const getMatchById = (mid) => {
             }
         });
     });
+}
+
+export const formatMatch = async (match) => {
+    // the match returned to the server should have the following properties:
+    /*
+    {
+        MID,
+        UID,
+        Timestamp,
+        cards:
+        [
+            {
+                C1.name = C1.name,
+                C1.picture = C1.picture,
+                C1.value = C1.value,
+            },  
+            ...,
+            {
+                Cn.name = Cn.name,
+                Cn.picture = Cn.picture
+                Cn.value = ???
+            }   
+        ]
+    }
+    */
+    const cardIds = [match.C1, match.C2, match.C3, match.C4, match.C5, match.C6, match.C7, match.C8].filter(cid => cid != null);
+
+    // Recupera tutte le carte dal DB
+    const cards = await Promise.all(cardIds.map(cid => getCardById(cid)));
+
+    // Costruisci l'oggetto JSON finale
+    const formatted = {
+        MID: match.MID,
+        UID: match.UID,
+        Timestamp: match.Timestamp,
+        cards: cards.map(card => ({
+            name: card.Name,
+            picture: card.Picture,
+            value: card.Value,
+            won: 0 // Default value for won, will be updated later
+        }))
+    };
+
+    if (formatted.cards[0]) formatted.cards[0].won = 1;
+    if (formatted.cards[1]) formatted.cards[1].won = 1;
+    if (formatted.cards[2]) formatted.cards[2].won = 1;
+    if (formatted.cards[3]) formatted.cards[3].won = match.W4;
+    if (formatted.cards[4]) formatted.cards[4].won = match.W5;
+    if (formatted.cards[5]) formatted.cards[5].won = match.W6;
+    if (formatted.cards[6]) formatted.cards[6].won = match.W7;
+    if (formatted.cards[7]) formatted.cards[7].won = match.W8;
+
+    // The server does not send the value of the last card if the round is incomplete, so we set it to -1
+    // This way the user cannot cheat to look it up and the client will not display it
+    const len = formatted.cards.length - 1;
+    if (formatted.cards.length == 4 && match.W4 == null) {
+        formatted.cards[len].value = -1;
+    }
+    else if (formatted.cards.length == 5 && match.W5 == null) {
+        formatted.cards[len].value = -1;
+    }
+    else if (formatted.cards.length == 6 && match.W6 == null) {
+        formatted.cards[len].value = -1;
+    }
+    else if (formatted.cards.length == 7 && match.W7 == null) {
+        formatted.cards[len].value = -1;
+    }
+    else if (formatted.cards.length == 8 && match.W8 == null) {
+        formatted.cards[len].value = -1;
+    }
+
+    return formatted;
 }
 
 export const drawCard = (mid, cardId) => {
@@ -134,7 +211,14 @@ export const drawCard = (mid, cardId) => {
                     if (err) {
                         reject(err);
                     } else {
-                        resolve({ message: "Card drawn successfully", changes: this.changes });
+                        // After updating the match, retrieve the updated row
+                        db.get(sql1, [mid], async (err, updatedRow) => {
+                            if (err) reject(err);
+                            else {
+                                const formatted = await formatMatch(updatedRow);
+                                resolve(formatted);
+                            }
+                        });
                     }
                 });
 
@@ -146,15 +230,93 @@ export const drawCard = (mid, cardId) => {
 
 export const getCurrentMatchByUserId = (uid) => {
   return new Promise((resolve, reject) => {
-    // Retrieve the most recent match for the user
-    const sql = 'SELECT * FROM MATCH WHERE UID = ? ORDER BY Timestamp DESC LIMIT 1';
+    // Retrieve the current match for the user
+    const sql = 'SELECT * FROM MATCH WHERE UID = ? AND Win IS NULL ORDER BY Timestamp DESC LIMIT 1';
     db.get(sql, [uid], (err, row) => {
-      if (err) {
+        if (err) {
         reject(err);
       } else if (!row) {
         resolve(null);
       } else {
         resolve(row);
+      }
+    });
+  });
+};
+
+export const removeC4 = (mid) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'UPDATE MATCH SET C4 = NULL WHERE MID = ?';
+    db.run(sql, [mid], function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ message: "Card C4 removed successfully", changes: this.changes });
+      }
+    });
+  });
+}
+
+export const removeC5 = (mid) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'UPDATE MATCH SET C5 = NULL WHERE MID = ?';
+    db.run(sql, [mid], function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ message: "Card C5 removed successfully", changes: this.changes });
+      }
+    });
+  });
+}
+
+export const removeC6 = (mid) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'UPDATE MATCH SET C6 = NULL WHERE MID = ?';
+    db.run(sql, [mid], function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ message: "Card C6 removed successfully", changes: this.changes });
+      }
+    });
+  });
+}
+
+export const removeC7 = (mid) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'UPDATE MATCH SET C7 = NULL WHERE MID = ?';
+    db.run(sql, [mid], function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ message: "Card C7 removed successfully", changes: this.changes });
+      }
+    });
+  });
+}
+
+export const removeC8 = (mid) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'UPDATE MATCH SET C8 = NULL WHERE MID = ?';
+    db.run(sql, [mid], function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ message: "Card C8 removed successfully", changes: this.changes });
+      }
+    });
+  });
+}
+
+export const updateMatchWin = (mid, win) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'UPDATE MATCH SET Win = ? WHERE MID = ?';
+    db.run(sql, [win, mid], function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ message: "Match updated successfully", changes: this.changes });
       }
     });
   });
