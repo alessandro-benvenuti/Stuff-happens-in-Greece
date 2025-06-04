@@ -23,7 +23,8 @@ import {
   removeC7,
   removeC8,
   updateMatchWin,
-  formatMatch
+  formatMatch,
+  updateRoundWin
 } from './dao.mjs';
 
 // init express
@@ -114,7 +115,6 @@ app.get('/api/cards/:id', async (req, res) => {
   const id = req.params.id;
   try {
     const card = await getCardById(id);
-    console.log(card);
     if (card) {
       res.json(card);
     } else {
@@ -176,6 +176,7 @@ app.post('/api/matches', isLoggedIn, async (req, res) => {
 });
 */
 
+// API to draw a new card for the match
 app.put('/api/matches/:id', isLoggedIn, async (req, res) => {
   const matchId = req.params.id;
 
@@ -214,6 +215,7 @@ app.put('/api/matches/:id', isLoggedIn, async (req, res) => {
   }
 });
 
+// API to retrieve the last current match or create a new one
 // Searches if there is a current match for the user, otherwise it creates a new one
 app.get('/api/matches/current', isLoggedIn, async (req, res) => {
   try {
@@ -265,7 +267,6 @@ app.get('/api/matches/current', isLoggedIn, async (req, res) => {
 
       try {
         const match = await createMatch(userId, timestamp, cards[0].CID, cards[1].CID, cards[2].CID);
-        console.log('New match created:', match);
         res.status(201).json(await formatMatch(match));
       } catch (error) {
         console.error('Error creating match:', error);
@@ -296,7 +297,6 @@ app.get('/api/matches/current', isLoggedIn, async (req, res) => {
         // we need to remove the card from the match
         await removeC8(match.MID);
       }
-      console.log('Current match found:', await formatMatch(match));
       res.json(await formatMatch(match));
     }
   } catch (error) {
@@ -304,6 +304,60 @@ app.get('/api/matches/current', isLoggedIn, async (req, res) => {
     res.status(500).json({ error: 'Error retrieving current match' });
   }
 });
+
+
+// API to check if the round is won or lost
+app.post('/api/matches/:id/', isLoggedIn, async (req, res) => {
+  const matchId = req.params.id;
+  const { lower, upper } = req.body;
+
+  try{
+    // retrieve the last drawn card of the match
+    const match = await getMatchById(matchId);
+
+    const cards = [
+      match.C1,
+      match.C2,
+      match.C3,
+      match.C4,
+      match.C5,
+      match.C6,
+      match.C7,
+      match.C8
+    ].filter(card => card !== null && card !== undefined);
+
+    const lastCard = await getCardById(cards[cards.length - 1]);
+
+    const lastRound = cards.length; // the first 3 cards are the initial ones
+
+    if (!lastCard) {
+      return res.status(404).send('Last card not found');
+    }
+
+    if( lastCard.Value >= lower && lastCard.Value <= upper) {
+      // the round is won
+      await updateRoundWin(matchId, lastRound, 1);
+      return res.status(200).json({
+        message: 'Round won',
+        card: lastCard
+      });
+    }
+    else{
+      // the round is lost
+      await updateRoundWin(matchId, lastRound, 0);
+      return res.status(200).json({
+        message: 'Round lost',
+        card: lastCard
+      });
+    }
+
+
+  } catch(error) {
+    console.error('Error checking round:', error);
+    return res.status(500).send('Error checking round');
+  }
+});
+
 
 // activate the server
 app.listen(port, () => {

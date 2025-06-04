@@ -130,9 +130,9 @@ export const formatMatch = async (match) => {
         ]
     }
     */
-    const cardIds = [match.C1, match.C2, match.C3, match.C4, match.C5, match.C6, match.C7, match.C8].filter(cid => cid != null);
+    const cardIds = [match.C1, match.C2, match.C3, match.C4, match.C5, match.C6, match.C7, match.C8];
 
-    // Recupera tutte le carte dal DB
+    // Retriueve all the cards from the DB
     const cards = await Promise.all(cardIds.map(cid => getCardById(cid)));
 
     // Costruisci l'oggetto JSON finale
@@ -159,21 +159,20 @@ export const formatMatch = async (match) => {
 
     // The server does not send the value of the last card if the round is incomplete, so we set it to -1
     // This way the user cannot cheat to look it up and the client will not display it
-    const len = formatted.cards.length - 1;
-    if (formatted.cards.length == 4 && match.W4 == null) {
-        formatted.cards[len].value = -1;
+    if (match.W4 == null) {
+        formatted.cards[3].value = -1;
     }
-    else if (formatted.cards.length == 5 && match.W5 == null) {
-        formatted.cards[len].value = -1;
+    else if (match.W5 == null) {
+        formatted.cards[4].value = -1;
     }
-    else if (formatted.cards.length == 6 && match.W6 == null) {
-        formatted.cards[len].value = -1;
+    else if (match.W6 == null) {
+        formatted.cards[5].value = -1;
     }
-    else if (formatted.cards.length == 7 && match.W7 == null) {
-        formatted.cards[len].value = -1;
+    else if (match.W7 == null) {
+        formatted.cards[6].value = -1;
     }
-    else if (formatted.cards.length == 8 && match.W8 == null) {
-        formatted.cards[len].value = -1;
+    else if (match.W8 == null) {
+        formatted.cards[7].value = -1;
     }
 
     return formatted;
@@ -309,14 +308,41 @@ export const removeC8 = (mid) => {
   });
 }
 
-export const updateMatchWin = (mid, win) => {
+export const updateRoundWin = (mid, cardIndex, win) => {
   return new Promise((resolve, reject) => {
-    const sql = 'UPDATE MATCH SET Win = ? WHERE MID = ?';
-    db.run(sql, [win, mid], function(err) {
+    const sql = `UPDATE MATCH SET W${cardIndex} = ? WHERE MID = ?`;
+    db.run(sql, [win, mid], async function(err) {
       if (err) {
         reject(err);
       } else {
-        resolve({ message: "Match updated successfully", changes: this.changes });
+        try {
+          // retrieve the match just updated
+          const updatedMatch = await getMatchById(mid);
+          const formatted = await formatMatch(updatedMatch);
+          resolve(formatted);
+        } catch (e) {
+          reject(e);
+        }
+      }
+    });
+  });
+};
+
+export const updateMatchWin = (mid, win) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'UPDATE MATCH SET Win = ? WHERE MID = ?';
+    db.run(sql, [win, mid], async function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        try {
+          // retrieve the match just updated
+          const updatedMatch = await getMatchById(mid);
+          const formatted = await formatMatch(updatedMatch);
+          resolve(formatted);
+        } catch (e) {
+          reject(e);
+        }
       }
     });
   });

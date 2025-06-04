@@ -51,6 +51,27 @@ export const drawCard = async (matchId) => {
   }
 }
 
+export const sendRoundChoice = async (matchId, lower, upper) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/matches/${matchId}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ lower, upper })
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err);
+    }
+    return await response.json(); // oppure response.text() se il server non restituisce JSON
+  } catch (error) {
+    console.error('Error sending round choice:', error);
+    throw error;
+  }
+};
+
 // login
 const logIn = async (credentials) => {
   const response = await fetch(SERVER_URL + '/api/sessions', {
@@ -101,6 +122,7 @@ const API = {
     getUserInfo,
     logOut,
     getCurrentMatch,
-    drawCard
+    drawCard,
+    sendRoundChoice
 };
 export default API;

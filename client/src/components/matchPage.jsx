@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import API from '../API/API.mjs';
 import { SERVER_URL } from '../API/API.mjs';
 import { Button } from 'react-bootstrap';
@@ -65,16 +65,23 @@ const MatchPage = (props) => {
         selectedIdx={selectedIdx}
         setSelectedIdx={setSelectedIdx}
         timeLeft={timeLeft}
+        setTimeLeft={setTimeLeft}
       />}
     </div>
   );
 };
 
-function DisplayMatch({ match, isPlaying, setIsPlaying, handleDrawCard, selectedIdx, setSelectedIdx, timeLeft }) {
+function DisplayMatch({ match, isPlaying, setIsPlaying, handleDrawCard, selectedIdx, setSelectedIdx, timeLeft, setTimeLeft }) {
   const deckCards = match.cards
     .filter(card => card !== undefined)
     .filter(card => card.value !== -1 && card.won == 1)
     .sort((a, b) => a.value - b.value);
+
+    const valid_cards = match.cards
+    .filter(card => card.name !== undefined)
+
+
+    const last_card = valid_cards[valid_cards.length - 1];
 
   // we have to display at the top the last card drawn and then the other cards
   return (
@@ -82,10 +89,11 @@ function DisplayMatch({ match, isPlaying, setIsPlaying, handleDrawCard, selected
       <div className="row align-items-start">
         <div className="col-5 p-0 m-0"/>
         <div className="col-2">
-          {isPlaying ? displayCard(match.cards[match.cards.length - 1]) : displayCoveredCard()}
+          {isPlaying ? displayCard(last_card) : displayCoveredCard()}
         </div>
         <div className="col-4 border p-3">
           <h4>Current state of the match</h4>
+          {displayPastRounds(match.cards)}
           {isPlaying ? (
             <>
               <div className="row justify-content-between">
@@ -105,12 +113,19 @@ function DisplayMatch({ match, isPlaying, setIsPlaying, handleDrawCard, selected
                       : "bg-danger")
                   } style={{ width: `${((30 - timeLeft) / 30) * 100}%` }}></div>
               </div>
-              <SendSelectedForm selectedIdx={selectedIdx} deckCards={deckCards} />
+              <SendSelectedForm 
+                selectedIdx={selectedIdx} 
+                deckCards={deckCards} 
+                timeLeft={timeLeft} 
+                setIsPlaying={setIsPlaying}
+                matchId={match.MID}
+              />
             </>
           ) : (
             <Button variant="primary" onClick={() => { 
                 setIsPlaying(true);
                 setSelectedIdx(-1);
+                setTimeLeft(30);
                 handleDrawCard(); 
             }}>
               Show new card
@@ -119,17 +134,53 @@ function DisplayMatch({ match, isPlaying, setIsPlaying, handleDrawCard, selected
         </div>
       </div>
 
-      <h4>Other Cards:</h4>
+      <div className="container-fluid mt-5 mb-5">
+        <h4>Your Deck:</h4>
+        {displayDeckCards(deckCards, selectedIdx, setSelectedIdx, isPlaying)}
+      </div>
 
-      {displayDeckCards(deckCards, selectedIdx, setSelectedIdx, isPlaying)}
 
     </div>
   )
 }
 
+function displayPastRounds(cards){
+  const selectedCards = cards.slice(3, 8); // from index 3 to 7 inclusive
+  return (
+    <div className="row justify-content-center">
+      <h4>Previous rounds:</h4>
+      {selectedCards.map((card) => (
+        <>
+          {
+            card.won === 1 ? (
+              <div className="col-2">
+                <h1>
+                  <i class="bi bi-check-square"></i>
+                </h1>
+              </div>
+            ) : card.won === 0 ? (
+              <div className="col-2">
+                <h1>
+                  <i class="bi bi-x-square"></i>
+                </h1>
+              </div>
+            ) : (
+              <div className="col-2">
+                <h1>
+                  <i class="bi bi-square"></i>
+                </h1>
+              </div>
+            )
+          }
+        </>
+      ))}
+    </div>
+  );
+}
+
 function displayDeckCards(deckCards, selectedIdx, setSelectedIdx, isPlaying) {
   return (
-    <div className="row align-items-center">
+    <div className="row align-items-center justify-content-center">
       {/* Prima colonna vuota */}
       <div className="col-1">
         <EmptyColButton idx={0} selectedIdx={selectedIdx} isPlaying={isPlaying} setSelectedIdx={setSelectedIdx} />
@@ -195,17 +246,20 @@ function displayCoveredCard() {
 }
 
 async function sendChoiceToServer(prevState, formData) {
-  const deckCardsJson = formData.get('deckCards');
-  const deckCards = JSON.parse(deckCardsJson);
-  const selectedIdx = formData.get('selectedIdx');
+  const selectedIdx = parseInt(formData.get('selectedIdx'), 10);
+  const matchId = parseInt(formData.get('matchId'), 10);
 
-  let lower = 0;
-  let upper = 100;
+  let lower = -1;
+  let upper = -1;
+    
 
-  if (selectedIdx === -1) {
-    // API call to send no selection
-  }
-  else {
+  if(selectedIdx !== null && selectedIdx !== undefined && selectedIdx !== -1) {
+    const deckCardsJson = formData.get('deckCards');
+    const deckCards = JSON.parse(deckCardsJson);
+
+    lower = 0;
+    upper = 100;
+
     if(selectedIdx == 0){
       upper = deckCards[0].value;
     }
@@ -219,20 +273,38 @@ async function sendChoiceToServer(prevState, formData) {
 
     // API call to send the selected indexes
     console.log(`Sending choice: lower=${lower}, upper=${upper}`);
-      
+    const result = await API.sendRoundChoice(matchId, lower, upper);
+    console.log('Choice sent successfully:', result);
+    
   }
+
+  return {success: true}; // Return success state
 }
 
-function SendSelectedForm({ selectedIdx, deckCards }) {
+function SendSelectedForm({ selectedIdx, deckCards, timeLeft, setIsPlaying, matchId }) {
   // Funzione che invia selectedIdx al server
   const [state, submit, isPending] = useActionState(
     async (prevState, formData) => sendChoiceToServer(prevState, formData),
     {success: false}
   );
+  const formRef = useRef();
+
+  useEffect(() => {
+    if (state.success) {
+      setIsPlaying(false); // Reset isPlaying state when the form is successfully submitted
+    }
+  }, [state.success, setIsPlaying]);
+
+  useEffect(() => {
+    if(timeLeft === 0 && formRef.current) {
+      formRef.current.requestSubmit();
+    }
+  }, [timeLeft]);
 
   return (
-    <form action={submit}>
+    <form action={submit} ref={formRef}>
       <input type="hidden" name="selectedIdx" value={selectedIdx} />
+      <input type="hidden" name="matchId" value={matchId} />
       <input type="hidden" name="deckCards" value={JSON.stringify(deckCards)} />
       <button type="submit" className="btn btn-primary" disabled={isPending || selectedIdx === -1}>
         Confirm
