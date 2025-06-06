@@ -2,7 +2,7 @@ import { useState } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './App.css'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import Navhead from './components/navhead'
 import Homepage from './components/Homepage'
 import Cardpage from './components/cardpage'
@@ -18,33 +18,9 @@ function App() {
   const [message, setMessage] = useState('');
   const [user, setUser] = useState('');
 
-  const [cards, setCards] = useState([]);
-  const [match, setMatch] = useState(null);
 
-  useEffect(() => {
-    const fetchCards = async () => {
-      try {
-        const allCards = await API.getAllCards();
-        setCards(allCards);
-      } catch (error) {
-        console.error('Error fetching cards:', error);
-      }
-    };
+  const naigate = useNavigate();
 
-    fetchCards();
-  }, []);
-
-  useEffect(() => {
-    const fetchMatch = async () => {
-      try {
-        const match = await API.getCurrentMatch();
-        setMatch(match);
-      } catch (error) {
-        console.error('Error fetching current match:', error);
-      }
-    };
-    fetchMatch();
-  }, []);
 
   // login
   const handleLogin = async (credentials) => {
@@ -78,6 +54,7 @@ function App() {
     await API.logOut();
     setLoggedIn(false);
     setMessage('');
+    naigate('/');
   };
 
 
@@ -86,9 +63,8 @@ function App() {
       <Navhead loggedIn={loggedIn} handleLogout={handleLogout} user={user} />
       <Routes>
         <Route path="/" element={<Homepage />} />
-        <Route path="/cards" element={<Cardpage cards={cards} />} />
         <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm handleLogin={handleLogin} />} />
-        <Route path="/match/current" element={loggedIn ? <MatchPage cards={cards} /> : <Navigate replace to='/' />} />
+        <Route path="/match/current" element={<MatchPage loggedIn={loggedIn} />} />
       </Routes>
       
     </>

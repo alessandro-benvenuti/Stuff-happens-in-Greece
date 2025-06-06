@@ -24,6 +24,7 @@ import {
   removeC8,
   updateMatchWin,
   formatMatch,
+  formatCard,
   updateRoundWin
 } from './dao.mjs';
 
@@ -80,6 +81,13 @@ const isLoggedIn = (req, res, next) => {
   }
   return res.status(401).json({error: 'Not authorized'});
 }
+
+const isGuest = (req, res, next) => {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    return next();
+  }
+  return res.status(403).json({ error: 'Only for guests' });
+};
 
 // login routes
 app.post('/api/sessions', passport.authenticate('local'), function(req, res) {
@@ -336,19 +344,64 @@ app.post('/api/matches/:id/', isLoggedIn, async (req, res) => {
 
     if( lastCard.Value >= lower && lastCard.Value <= upper) {
       // the round is won
-      await updateRoundWin(matchId, lastRound, 1);
-      return res.status(200).json({
-        message: 'Round won',
-        card: lastCard
-      });
+      const updated_match = await updateRoundWin(matchId, lastRound, 1);
+      // if there are 3 round won then the match is won
+      let count=0;
+      for(const card of updated_match.cards) {
+        if(card.won === 1) {
+          count++;
+        }
+      }
+      console.log("match: ", updated_match);
+      if(count >= 6) {
+        await updateMatchWin(matchId, 1);
+        return res.status(200).json({
+          message: 'Round won',
+          cards: updated_match.cards,
+          card: lastCard,
+          round: "won",
+          match: "won"
+        });
+      }
+      else{
+        return res.status(200).json({
+          message: 'Round won',
+          cards: updated_match.cards,
+          card: lastCard,
+          round: "won",
+          match: null
+        });
+      }
     }
     else{
       // the round is lost
-      await updateRoundWin(matchId, lastRound, 0);
-      return res.status(200).json({
-        message: 'Round lost',
-        card: lastCard
-      });
+      const updated_match = await updateRoundWin(matchId, lastRound, 0);
+      // if there are 3 round won then the match is won
+      let count=0;
+      for(const card of updated_match.cards) {
+        if(card.won === 0) {
+          count++;
+        }
+      }
+      if(count >= 3) {
+        await updateMatchWin(matchId, 0);
+        return res.status(200).json({
+          message: 'Round lost',
+          cards: updated_match.cards,
+          card: lastCard,
+          round: "lost",
+          match: "lost"
+        });
+      }
+      else{
+        return res.status(200).json({
+          message: 'Round lost',
+          cards: updated_match.cards,
+          card: lastCard,
+          round: "lost",
+          match: null
+        });
+      }
     }
 
 
@@ -358,6 +411,126 @@ app.post('/api/matches/:id/', isLoggedIn, async (req, res) => {
   }
 });
 
+// API to create a match for a guest user
+app.get('/api/matches/guest', isGuest, async (req, res) => {
+  // Create a guest match
+  const cards = [];
+
+  // get 3 random cards from the database
+  try {
+    const allCards = await getAllCards();
+    for (let i = 0; i < 3; i++) {
+      const randomIndex = Math.floor(Math.random() * allCards.length);
+      if (cards.includes(allCards[randomIndex])) {
+        i--; // If the card is already selected, decrement i to try again
+        continue;
+      }
+      cards.push(allCards[randomIndex]);
+    }
+  } catch (error) {
+    console.error('Error retrieving cards:', error);
+    return res.status(500).send('Error retrieving cards');
+  }
+
+  // timestamp
+  const timestamp = dayjs().toISOString();
+
+  try {
+    res.status(201).json({
+      MID: null, // Guest matches do not have an ID
+      UID: null, // Guest matches do not have a user ID
+      Timestamp: timestamp,
+      cards: [
+        await formatCard(cards[0].CID, 1),
+        await formatCard(cards[1].CID, 1),
+        await formatCard(cards[2].CID, 1),
+      ]
+    });
+  } catch (error) {
+    console.error('Error creating match:', error);
+    res.status(500).send('Error creating match');
+  }
+});
+
+// API to draw a random card for a gest user
+app.post('/api/matches/guest/draw', isGuest, async (req, res) => {
+  // Retrieve the card codes from the request body
+  const { c1, c2, c3 } = req.body;
+
+  console.log('Guest draw request:', c1, c2, c3);
+
+  if (!c1 || !c2 || !c3) {
+    return res.status(400).json({ error: 'Missing card codes' });
+  }
+
+  try {
+    // Get all cards from the DB
+    const allCards = await getAllCards();
+    // Filter out the cards that are already in play
+    const usedCards = [parseInt(c1), parseInt(c2), parseInt(c3)];
+    const availableCards = allCards.filter(card => !usedCards.includes(card.CID));
+
+    // Draw a new random card from the available ones
+    const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+    if (!randomCard) {
+      return res.status(404).json({ error: 'No available cards to draw' });
+    }
+
+    // Prepare the new match object with all 4 cards
+    const timestamp = dayjs().toISOString();
+    res.status(200).json({
+      MID: null,
+      UID: null,
+      Timestamp: timestamp,
+      cards: [
+        await formatCard(c1, 1),
+        await formatCard(c2, 1),
+        await formatCard(c3, 1),
+        await formatCard(randomCard.CID, null)
+      ]
+    });
+  } catch (error) {
+    console.error('Error drawing guest card:', error);
+    res.status(500).json({ error: 'Error drawing guest card' });
+  }
+});
+
+// API to check if the guest round is won or lost
+app.post('/api/matches/guest/round', isGuest, async (req, res) => {
+  const { lower, upper, cid } = req.body;
+
+  if (lower === undefined || upper === undefined || !cid) {
+    return res.status(400).json({ error: 'Missing parameters' });
+  }
+
+  try {
+    const card = await getCardById(cid);
+    if (!card) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+
+    if (card.Value >= lower && card.Value <= upper) {
+      // Round won
+      return res.status(200).json({
+        message: 'Round won',
+        card: card,
+        round: 'won',
+        match: "won"
+      });
+    } else {
+      // Round lost
+      return res.status(200).json({
+        message: 'Round lost',
+        card: card,
+        round: 'lost',
+        match: "lost"
+      });
+    }
+  } catch (error) {
+    console.error('Error checking guest round:', error);
+    res.status(500).json({ error: 'Error checking guest round' });
+  }
+});
 
 // activate the server
 app.listen(port, () => {

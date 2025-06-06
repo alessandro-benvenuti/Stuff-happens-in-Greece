@@ -107,6 +107,18 @@ export const getMatchById = (mid) => {
     });
 }
 
+export const formatCard = async (cid, won) => {
+  const card = await getCardById(cid);
+  return {
+    cid: cid,
+    name: card.Name,
+    picture: card.Picture,
+    value: won==null ? -1 : card.Value,
+    won: won
+  };
+}
+
+
 export const formatMatch = async (match) => {
     // the match returned to the server should have the following properties:
     /*
@@ -117,15 +129,19 @@ export const formatMatch = async (match) => {
         cards:
         [
             {
+                C1.cid = C1.cid,
                 C1.name = C1.name,
                 C1.picture = C1.picture,
                 C1.value = C1.value,
+                C1.won = 1 // if the card is won, otherwise 0
             },  
             ...,
             {
+                Cn.cid = Cn.cid,
                 Cn.name = Cn.name,
                 Cn.picture = Cn.picture
                 Cn.value = ???
+                Cn.won = undefined // if the card is not drawn yet, otherwise 0 or 1
             }   
         ]
     }
@@ -141,6 +157,7 @@ export const formatMatch = async (match) => {
         UID: match.UID,
         Timestamp: match.Timestamp,
         cards: cards.map(card => ({
+            cid: card.CID,
             name: card.Name,
             picture: card.Picture,
             value: card.Value,

@@ -1,4 +1,4 @@
-import {Card, User, Match} from '../models/AGmodels.mjs';
+import {Card, User, Match, Round} from '../models/AGmodels.mjs';
 
 export const SERVER_URL = 'http://localhost:3001';
 
@@ -65,9 +65,65 @@ export const sendRoundChoice = async (matchId, lower, upper) => {
       const err = await response.text();
       throw new Error(err);
     }
-    return await response.json(); // oppure response.text() se il server non restituisce JSON
+    const round = await response.json();
+    return new Round(round.message, round.cards, round.card, round.round, round.match);
   } catch (error) {
     console.error('Error sending round choice:', error);
+    throw error;
+  }
+};
+
+export const getMatchGuest = async () => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/matches/guest`, {});
+    if (!response.ok) {
+      throw new Error('Internal server error');
+    }
+    const data = await response.json();
+    return new Match(data.MID, data.UID, data.Timestamp, data.cards);
+  } catch (error) {
+    console.error('Error fetching guest match:', error);
+    throw error;
+  }
+};
+
+export const drawCardGuest = async (c1, c2, c3) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/matches/guest/draw`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ c1, c2, c3 })
+    });
+    if (!response.ok) {
+      throw new Error('Internal server error');
+    }
+    const data = await response.json();
+    return new Match(data.MID, data.UID, data.Timestamp, data.cards);
+  } catch (error) {
+    console.error('Error drawing card for guest:', error);
+    throw error;
+  }
+};
+
+export const sendRoundChoiceGuest = async (lower, upper, cid) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/matches/guest/round`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ lower, upper, cid })
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err);
+    }
+    const round = await response.json();
+    return new Round(round.message,[], round.card, round.round, round.match);
+  } catch (error) {
+    console.error('Error sending round choice for guest:', error);
     throw error;
   }
 };
@@ -100,7 +156,7 @@ const getUserInfo = async () => {
   if (response.ok) {
     return user;
   } else {
-    throw user;
+    throw new Error('Not authenticated');
   }
 };
 
@@ -123,6 +179,9 @@ const API = {
     logOut,
     getCurrentMatch,
     drawCard,
-    sendRoundChoice
+    sendRoundChoice,
+    getMatchGuest,
+    drawCardGuest,
+    sendRoundChoiceGuest
 };
 export default API;

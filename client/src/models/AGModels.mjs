@@ -31,6 +31,18 @@ function Match(MID, UID, Timestamp, cards) {
     };
 }
 
+function Round(Message, Cards, Card, Round, Match) {
+    this.Message = Message;
+    this.Cards = Cards;
+    this.Card = Card;
+    this.Round = Round;
+    this.Match = Match;
 
-export { Card, User, Match };
+    this.toString = function() {
+        return `Round: ${this.Roun}, Message: ${this.Message}, Card: ${this.Card.toString()}, Match: ${this.Match.toString()}`;
+    };
+}
+
+
+export { Card, User, Match, Round };
 

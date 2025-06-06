@@ -3,8 +3,13 @@ import API from '../API/API.mjs';
 import { SERVER_URL } from '../API/API.mjs';
 import { Button } from 'react-bootstrap';
 import { useActionState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const MatchPage = (props) => {
+  // into the props we have loggedIn which tells if the user is logged in or not
+  // we need to differentiate between the logged in user and the guest user
+  const { loggedIn } = props;
+
   const [match, setMatch] = useState(null);
 
   // we need to keep track of the playing state
@@ -16,11 +21,26 @@ const MatchPage = (props) => {
   // we need to keep track of the selected card index
   const [selectedIdx, setSelectedIdx] = useState(-1);
 
+  // we need to keep track of the previous round
+  const [previousRound, setPreviousRound] = useState(null);
+
+  // we need to keep track if the player wins the game
+  const [showWinModal, setShowWinModal] = useState(null);
+  const [wonCards, setWonCards] = useState([]);
+
   useEffect(() => {     // the component is mounted with the page
     const fetchMatch = async () => {
       try {
-        const m = await API.getCurrentMatch();
-        setMatch(m);
+        if(loggedIn) {
+            // if the user is logged in, we fetch the current match 
+            const m = await API.getCurrentMatch();
+            setMatch(m);
+        }
+        else{
+          // if the user is a guest, we get the match for the guest
+          const m = await API.getMatchGuest();
+          setMatch(m);
+        }
       } catch (error) {
         setMatch(null);
       }
@@ -31,9 +51,16 @@ const MatchPage = (props) => {
   // Function to draw a new card
   const handleDrawCard = async () => {
     try {
-      const updatedMatch = await API.drawCard(match.MID);
-      setMatch(updatedMatch);
-      setIsPlaying(true);
+      if(loggedIn){
+        const updatedMatch = await API.drawCard(match.MID);
+        setMatch(updatedMatch);
+        setIsPlaying(true);
+      } else {
+        console.log("cards: ", match.cards);
+        const updatedMatch = await API.drawCardGuest(match.cards[0].cid, match.cards[1].cid, match.cards[2].cid);
+        setMatch(updatedMatch);
+        setIsPlaying(true);
+      }
     } catch (error) {
       setMatch(null);
     }
@@ -57,8 +84,16 @@ const MatchPage = (props) => {
       <h1>{match ? `Match ID: ${match.MID}` : 'No current match'}</h1>
       <h2>{match ? `User ID: ${match.UID}` : ''}</h2>
       <h3>{match ? `Timestamp: ${new Date(match.Timestamp).toLocaleString()}` : ''}</h3>
+      <WinModal
+        showWinModal={showWinModal}
+        wonCards={wonCards}
+        setMatch={setMatch}
+        setShowWinModal={setShowWinModal}
+        loggedIn={loggedIn}
+      />
       {match && <DisplayMatch 
         match={match}
+        setMatch={setMatch}
         isPlaying={isPlaying}
         setIsPlaying={setIsPlaying}
         handleDrawCard={handleDrawCard} 
@@ -66,12 +101,34 @@ const MatchPage = (props) => {
         setSelectedIdx={setSelectedIdx}
         timeLeft={timeLeft}
         setTimeLeft={setTimeLeft}
+        previousRound={previousRound}
+        setPreviousRound={setPreviousRound}
+        showWinModal={showWinModal}
+        setShowWinModal={setShowWinModal}
+        shownCards={wonCards}
+        setWonCards={setWonCards}
+        loggedIn={loggedIn}
       />}
     </div>
   );
 };
 
-function DisplayMatch({ match, isPlaying, setIsPlaying, handleDrawCard, selectedIdx, setSelectedIdx, timeLeft, setTimeLeft }) {
+function DisplayMatch({ match,
+   setMatch, 
+   isPlaying, 
+   setIsPlaying, 
+   handleDrawCard, 
+   selectedIdx, 
+   setSelectedIdx, 
+   timeLeft, 
+   setTimeLeft, 
+   previousRound, 
+   setPreviousRound, 
+   showWinModal, 
+   setShowWinModal, 
+   shownCards, 
+   setWonCards,
+   loggedIn }) {
   const deckCards = match.cards
     .filter(card => card !== undefined)
     .filter(card => card.value !== -1 && card.won == 1)
@@ -92,8 +149,7 @@ function DisplayMatch({ match, isPlaying, setIsPlaying, handleDrawCard, selected
           {isPlaying ? displayCard(last_card) : displayCoveredCard()}
         </div>
         <div className="col-4 border p-3">
-          <h4>Current state of the match</h4>
-          {displayPastRounds(match.cards)}
+          {loggedIn && displayPastRounds(match.cards) /*show the previous rounds only if the user is logged in*/}
           {isPlaying ? (
             <>
               <div className="row justify-content-between">
@@ -119,17 +175,31 @@ function DisplayMatch({ match, isPlaying, setIsPlaying, handleDrawCard, selected
                 timeLeft={timeLeft} 
                 setIsPlaying={setIsPlaying}
                 matchId={match.MID}
+                setPreviousRound={setPreviousRound}
+                setMatch={setMatch}
+                setShowWinModal={setShowWinModal}
+                setWonCards={setWonCards}
+                loggedIn={loggedIn}
+                allCards={match.cards}
               />
             </>
           ) : (
-            <Button variant="primary" onClick={() => { 
-                setIsPlaying(true);
-                setSelectedIdx(-1);
-                setTimeLeft(30);
-                handleDrawCard(); 
-            }}>
-              Show new card
-            </Button>
+            <>
+              {previousRound === null
+                ? <h4>Are you ready?</h4>
+                : previousRound === 1
+                  ? <h4 className="text-success">You got it right!</h4>
+                  : <h4 className="text-danger">You got it wrong! Better luck next time.</h4>
+              }
+              <Button variant="primary" onClick={() => { 
+                  setIsPlaying(true);
+                  setSelectedIdx(-1);
+                  setTimeLeft(30);
+                  handleDrawCard(); 
+              }}>
+                Show new card
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -149,30 +219,30 @@ function displayPastRounds(cards){
   return (
     <div className="row justify-content-center">
       <h4>Previous rounds:</h4>
-      {selectedCards.map((card) => (
-        <>
+      {selectedCards.map((card, idx) => (
+        <React.Fragment key={idx}>
           {
             card.won === 1 ? (
-              <div className="col-2">
+              <div className="col-2 text-success">
                 <h1>
-                  <i class="bi bi-check-square"></i>
+                  <i className="bi bi-check-square"></i>
                 </h1>
               </div>
             ) : card.won === 0 ? (
-              <div className="col-2">
+              <div className="col-2 text-danger">
                 <h1>
-                  <i class="bi bi-x-square"></i>
+                  <i className="bi bi-x-square"></i>
                 </h1>
               </div>
             ) : (
               <div className="col-2">
                 <h1>
-                  <i class="bi bi-square"></i>
+                  <i className="bi bi-square"></i>
                 </h1>
               </div>
             )
           }
-        </>
+        </React.Fragment>
       ))}
     </div>
   );
@@ -207,13 +277,13 @@ function EmptyColButton({ idx, selectedIdx, setSelectedIdx, isPlaying }) {
         {selectedIdx === idx ? (
           <button className="btn btn-outline btn-sm text-primary" onClick={() => setSelectedIdx(-1)}>
             <h1>
-              <i class="bi bi-check2-circle"></i>
+              <i className="bi bi-check2-circle"></i>
             </h1>
           </button>
         ) : (
           <button className="btn btn-outline btn-sm" onClick={() => setSelectedIdx(idx)}>
             <h1>
-              <i class="bi bi-plus-circle-fill"></i>
+              <i className="bi bi-plus-circle-fill"></i>
             </h1>
           </button>
         )}
@@ -248,10 +318,11 @@ function displayCoveredCard() {
 async function sendChoiceToServer(prevState, formData) {
   const selectedIdx = parseInt(formData.get('selectedIdx'), 10);
   const matchId = parseInt(formData.get('matchId'), 10);
+  const loggedIn = formData.get('loggedIn') === 'true'; // Convert to boolean
 
   let lower = -1;
   let upper = -1;
-    
+
 
   if(selectedIdx !== null && selectedIdx !== undefined && selectedIdx !== -1) {
     const deckCardsJson = formData.get('deckCards');
@@ -270,18 +341,26 @@ async function sendChoiceToServer(prevState, formData) {
       lower = deckCards[selectedIdx - 1].value;
       upper = deckCards[selectedIdx].value;
     }
-
-    // API call to send the selected indexes
-    console.log(`Sending choice: lower=${lower}, upper=${upper}`);
-    const result = await API.sendRoundChoice(matchId, lower, upper);
-    console.log('Choice sent successfully:', result);
     
   }
 
-  return {success: true}; // Return success state
+  let result = {};
+
+  if (loggedIn) {
+    result = await API.sendRoundChoice(matchId, lower, upper);
+  }
+  else {
+    const allCardsJson = formData.get('allCards');
+    const allCards = JSON.parse(allCardsJson);
+    result = await API.sendRoundChoiceGuest(lower, upper, allCards[3].cid);
+  }
+
+  console.log("result: ", result);
+
+  return {success: true, round: result.Round, match: result.Match, cards: result.Cards}; // Return success state
 }
 
-function SendSelectedForm({ selectedIdx, deckCards, timeLeft, setIsPlaying, matchId }) {
+function SendSelectedForm({ selectedIdx, deckCards, timeLeft, setIsPlaying, matchId, setPreviousRound, setMatch, setShowWinModal, setWonCards, loggedIn, allCards }) {
   // Funzione che invia selectedIdx al server
   const [state, submit, isPending] = useActionState(
     async (prevState, formData) => sendChoiceToServer(prevState, formData),
@@ -301,16 +380,144 @@ function SendSelectedForm({ selectedIdx, deckCards, timeLeft, setIsPlaying, matc
     }
   }, [timeLeft]);
 
+  useEffect(() => {
+    if (state.success) {
+      setIsPlaying(false);
+      // Update previousRound
+      if (state.round && state.round === 'won') {
+        setPreviousRound(1);
+      } else {
+        setPreviousRound(0);
+      }
+      // Update the match
+      if(state.match == "won") {
+        setPreviousRound(null);
+        console.log("cards: ", state.cards);
+        setWonCards(state.cards.filter(card => card && card.won === 1));
+        setShowWinModal("won");
+      }
+      else if(state.match == "lost") {
+        setPreviousRound(null);
+        setWonCards(state.cards.filter(card => card && card.won === 1));
+        setShowWinModal("lost");
+      }
+      else {
+        (async () => {
+          let m;
+          if (loggedIn) {
+            m = await API.getCurrentMatch();
+          } else {
+            m = await API.getMatchGuest();
+          }
+          setMatch(m);
+        })();
+      }
+    }
+  }, [state.success, state.round, state.match, state.cards, setIsPlaying, setPreviousRound, setMatch]);
+
   return (
     <form action={submit} ref={formRef}>
       <input type="hidden" name="selectedIdx" value={selectedIdx} />
       <input type="hidden" name="matchId" value={matchId} />
+      <input type="hidden" name="loggedIn" value={loggedIn} />
       <input type="hidden" name="deckCards" value={JSON.stringify(deckCards)} />
+      <input type="hidden" name="allCards" value={JSON.stringify(allCards)} />
       <button type="submit" className="btn btn-primary" disabled={isPending || selectedIdx === -1}>
         Confirm
       </button>
     </form>
   );
+}
+
+function WinModal({ showWinModal, wonCards, setMatch, setShowWinModal, loggedIn }) {
+  if (!showWinModal) return null;
+
+  const navigate = useNavigate();
+
+  const handleClose = () => {
+    setShowWinModal(false);
+    (async () => {
+      let m;
+      if (loggedIn) {
+        m = await API.getCurrentMatch();
+      } else {
+        m = await API.getMatchGuest();
+      }
+      setMatch(m);
+    })();
+  };
+
+  const handleGoHome = () => {
+    setShowWinModal(false);
+    setTimeout(() => navigate('/'), 0);
+  };
+
+  if (loggedIn) {
+    return (
+      <div className="modal show d-block" tabIndex="-1" role="dialog">
+        <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className={"modal-title" + (showWinModal === "won" ? " text-success" : " text-danger")}>
+                {showWinModal === "won" ? "You won the game!" : "You lost the game!"}
+              </h5>
+              <button type="button" className="btn-close" onClick={handleClose}></button>
+            </div>
+            <div className="modal-body">
+              <h6>Your cards:</h6>
+              <div className="row">
+                {wonCards.map((card, idx) => (
+                  <div className="col-4 mb-3" key={idx}>
+                    <div className="card">
+                      <img src={`${SERVER_URL}/images/${card.picture}`} className="card-img-top" alt={card.name} />
+                      <div className="card-body">
+                        <h6 className="card-title">{card.name}</h6>
+                        <p className="card-text">Value: {card.value}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={handleGoHome}>
+                Go Home
+              </button>
+              <button type="button" className="btn btn-primary" onClick={handleClose}>
+                New Game
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  else{
+    return <div className="modal show d-block" tabIndex="-1" role="dialog">
+        <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className={"modal-title" + (showWinModal === "won" ? " text-success" : " text-danger")}>
+                {showWinModal === "won" ? "You won the game!" : "You lost the game!"}
+              </h5>
+              <button type="button" className="btn-close" onClick={handleClose}></button>
+            </div>
+            <div className="modal-body">
+              <h6>The gameplay demo ends here!</h6>
+              <p>To continue playing, please log in to your account, otherwise you can still play this demo</p>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={handleGoHome}>
+                Go Home
+              </button>
+              <button type="button" className="btn btn-primary" onClick={handleClose}>
+                New Game
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+  }
 }
 
 export default MatchPage;
