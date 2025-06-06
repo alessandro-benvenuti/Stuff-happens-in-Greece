@@ -25,7 +25,8 @@ import {
   updateMatchWin,
   formatMatch,
   formatCard,
-  updateRoundWin
+  updateRoundWin,
+  getAllMatchesByUserId
 } from './dao.mjs';
 
 // init express
@@ -530,6 +531,26 @@ app.post('/api/matches/guest/round', isGuest, async (req, res) => {
     console.error('Error checking guest round:', error);
     res.status(500).json({ error: 'Error checking guest round' });
   }
+});
+
+// API to get the user info
+app.get('/api/profile', isLoggedIn, async (req, res) => {
+  // req.user.id contains the ID of the authenticated user
+  const userID = req.user.id;
+
+  if (!userID) {
+    return res.status(400).json({ error: 'Invalid user ID' });
+  }
+
+  try{
+    const past_matches = await getAllMatchesByUserId(userID);
+    res.status(200).json(past_matches );
+  } catch (error) {
+    console.error('Error retrieving user info:', error);
+    res.status(500).json({ error: 'Error retrieving user info' });
+  }
+
+
 });
 
 // activate the server

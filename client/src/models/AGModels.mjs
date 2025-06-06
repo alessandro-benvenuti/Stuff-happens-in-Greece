@@ -20,11 +20,12 @@ function User(UID, Username) {
     };
 }
 
-function Match(MID, UID, Timestamp, cards) {
+function Match(MID, UID, Timestamp, cards, win) {
     this.MID = MID;
     this.UID = UID;
     this.Timestamp = Timestamp;
     this.cards = cards;
+    this.win = win;
 
     this.toString = function() {
         return `Match ID: ${this.MID}, User ID: ${this.UID}, Timestamp: ${this.Timestamp}`;

@@ -162,7 +162,8 @@ export const formatMatch = async (match) => {
             picture: card.Picture,
             value: card.Value,
             won: 0 // Default value for won, will be updated later
-        }))
+        })),
+        win: match.Win,
     };
 
     if (formatted.cards[0]) formatted.cards[0].won = 1;
@@ -364,3 +365,39 @@ export const updateMatchWin = (mid, win) => {
     });
   });
 };
+
+export const getAllMatchesByUserId = (uid) => {
+  return new Promise((resolve, reject) => {
+    let formattedMatches = [];
+
+    const sql = 'SELECT * FROM MATCH WHERE UID = ? AND Win IS NOT NULL ORDER BY Timestamp DESC';
+
+
+    db.all(sql, [uid], async (err, rows) => {
+      if (err) {
+        reject(err);
+      } else if (rows.length === 0) {
+        resolve([]);
+      } else {
+
+        try {
+          for(let match of rows) {
+            let temp_match = await formatMatch(match);
+            const temp_cards = temp_match.cards.map(card => ({
+              cid: card.cid,
+              name: card.name,
+              picture: "#",   // the picture is not shown in the history of matches
+              value: -1,      // the value is not shown in the history of matches
+              won: card.won
+            }));
+            temp_match.cards = temp_cards;
+            formattedMatches.push(temp_match);
+          }
+          resolve(formattedMatches);
+        } catch (e) {
+          reject(e);
+        }
+      }
+    });
+  });
+}

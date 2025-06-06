@@ -11,6 +11,7 @@ import { LoginForm } from './components/authComponents'
 import { useEffect } from 'react';
 import API from "./API/API.mjs";
 import { use } from 'react';
+import Profilepage from './components/profilePage';
 
 
 function App() {
@@ -65,6 +66,7 @@ function App() {
         <Route path="/" element={<Homepage />} />
         <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm handleLogin={handleLogin} />} />
         <Route path="/match/current" element={<MatchPage loggedIn={loggedIn} />} />
+        <Route path="/profile" element={loggedIn ? <Profilepage user={user} /> : <Navigate replace to='/login' />} />
       </Routes>
       
     </>

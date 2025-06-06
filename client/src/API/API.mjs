@@ -27,7 +27,7 @@ export const getCurrentMatch = async () => {
             throw new Error('Internal server error');
         }
         const data = await response.json();
-        return new Match(data.MID, data.UID, data.Timestamp, data.cards)
+        return new Match(data.MID, data.UID, data.Timestamp, data.cards, data.win);
     } catch (error) {
         console.error('Error fetching current match:', error);
         throw error;
@@ -44,7 +44,7 @@ export const drawCard = async (matchId) => {
       throw new Error('Internal server error');
     }
     const data = await response.json();
-    return new Match(data.MID, data.UID, data.Timestamp, data.cards);
+    return new Match(data.MID, data.UID, data.Timestamp, data.cards, data.win);
   } catch (error) {
     console.error('Error drawing card:', error);
     throw error;
@@ -80,7 +80,7 @@ export const getMatchGuest = async () => {
       throw new Error('Internal server error');
     }
     const data = await response.json();
-    return new Match(data.MID, data.UID, data.Timestamp, data.cards);
+    return new Match(data.MID, data.UID, data.Timestamp, data.cards, data.win);
   } catch (error) {
     console.error('Error fetching guest match:', error);
     throw error;
@@ -100,7 +100,7 @@ export const drawCardGuest = async (c1, c2, c3) => {
       throw new Error('Internal server error');
     }
     const data = await response.json();
-    return new Match(data.MID, data.UID, data.Timestamp, data.cards);
+    return new Match(data.MID, data.UID, data.Timestamp, data.cards, data.win);
   } catch (error) {
     console.error('Error drawing card for guest:', error);
     throw error;
@@ -124,6 +124,23 @@ export const sendRoundChoiceGuest = async (lower, upper, cid) => {
     return new Round(round.message,[], round.card, round.round, round.match);
   } catch (error) {
     console.error('Error sending round choice for guest:', error);
+    throw error;
+  }
+};
+
+// function to get the past maches of the user
+export const getPastMatches = async () => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/profile`, {
+      credentials: 'include'
+    });
+    if (!response.ok) {
+      throw new Error('Internal server error');
+    }
+    const data = await response.json();
+    return data.map(match => new Match(match.MID, match.UID, match.Timestamp, match.cards, match.win));
+  } catch (error) {
+    console.error('Error fetching past matches:', error);
     throw error;
   }
 };
@@ -182,6 +199,7 @@ const API = {
     sendRoundChoice,
     getMatchGuest,
     drawCardGuest,
-    sendRoundChoiceGuest
+    sendRoundChoiceGuest,
+    getPastMatches
 };
 export default API;

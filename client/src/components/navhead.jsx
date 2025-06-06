@@ -32,13 +32,28 @@ const Navhead = (props) => {
                     <div className="collapse navbar-collapse" id="navbarNav">
                         <ul className="navbar-nav">
                             <li className="nav-item">
-                                <a className="nav-link" aria-current="page" href="#">Rules</a>
+                                <Link to="/rules" className="nav-link" href="#">
+                                    Rules
+                                </Link>
                             </li>
+                            {/*
                             <li className="nav-item">
-                                <a className="nav-link" href="#">Leaderboards</a>
+                                <Link to="/" className="nav-link disabled" href="#">
+                                    Leaderboards
+                                </Link>
                             </li>
+                            */}
+                            {props.loggedIn &&
+                                <li className="nav-item">
+                                    <Link to="/profile" className="nav-link" href="#">
+                                        Your profile
+                                    </Link>
+                                </li>
+                            }
                             <li className="nav-item">
-                                <a className="nav-link" href="#">News</a>
+                                <Link to="/" className="nav-link disabled" href="#">
+                                    News
+                                </Link>
                             </li>
                             <li>
                                 <Button onClick={() => setDarkMode(oldMode => !oldMode)}>
