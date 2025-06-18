@@ -1,0 +1,9 @@
+/* Progress bar RTL: parte piena a destra e si svuota verso destra */
+.progress-rtl {
+  direction: rtl;
+}
+
+/* Transizione fluida della larghezza */
+.progress-bar {
+  transition: width 1s linear;
+}

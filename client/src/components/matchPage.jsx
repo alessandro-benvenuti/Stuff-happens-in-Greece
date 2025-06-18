@@ -4,6 +4,7 @@ import { SERVER_URL } from '../API/API.mjs';
 import { Button } from 'react-bootstrap';
 import { useActionState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './style/matchPage.css';
 
 const MatchPage = (props) => {
   // into the props we have loggedIn which tells if the user is logged in or not
@@ -159,14 +160,14 @@ function DisplayMatch({ match,
                   {timeLeft}s
                 </div>
               </div>
-              <div className="progress mt-1 mb-3" role="progressbar" aria-valuenow={timeLeft}>
+              <div className="progress mt-1 mb-3 progress-rtl" role="progressbar" aria-valuenow={timeLeft}>
                   <div className={"progress-bar " +
                     (timeLeft > 10
                       ? "bg-success"
                       : timeLeft > 3
                       ? "bg-warning"
                       : "bg-danger")
-                  } style={{ width: `${((30 - timeLeft) / 30) * 100}%` }}></div>
+                  } style={{ width: `${(timeLeft / 30) * 100}%` }}></div>
               </div>
               <SendSelectedForm 
                 selectedIdx={selectedIdx} 

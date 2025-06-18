@@ -17,6 +17,18 @@ const Profilepage = (props) => {
         fetchHistory();
     }, []);
 
+    // Compute statistics
+    const gamesPlayed = history.length;
+    const gamesWon = history.filter(match => match.win === 1).length;
+    const winPercentage = gamesPlayed > 0 ? ((gamesWon / gamesPlayed) * 100).toFixed(1) : "0.0";
+    const roundsWon = history.reduce((acc, match) => {
+        if (match.cards && match.cards.length > 0) {
+            // Count only the won rounds (card.won === 1), excluding the first 3 initial cards
+            return acc + match.cards.slice(3).filter(card => card.won === 1).length;
+        }
+        return acc;
+    }, 0);
+
     const displayMatch = (match, index) => {
         const date = new Date(match.Timestamp);
         const formattedDate = date.toLocaleDateString('en-US', {
@@ -31,7 +43,7 @@ const Profilepage = (props) => {
             hour12: false
         });
         return (
-            <div key={index} className="card m-3">
+            <div key={index} className="card mt-5">
                 <div className={"card-header" + (match.win === 1 ? " text-success" : " text-danger")}>
                     <h4>
                         {match.win === 1 ? "Victory" : "Defeat"}
@@ -87,10 +99,30 @@ const Profilepage = (props) => {
     return (
         <div className="container p-5">
             <div className="row">
-                <div className="col-4 pt-3">
+                <div className="col-4 mt-5">
                     <h3>Your stats: </h3>
+                    <div className='container p-3'>
+                        <ul className="list-group">
+                            <li className="list-group-item d-flex justify-content-between align-items-center">
+                                Games played
+                                <span className="badge bg-primary">{gamesPlayed}</span>
+                            </li>
+                            <li className="list-group-item d-flex justify-content-between align-items-center">
+                                Games won
+                                <span className="badge bg-success">{gamesWon}</span>
+                            </li>
+                            <li className="list-group-item d-flex justify-content-between align-items-center">
+                                Win percentage
+                                <span className="badge bg-info text-dark">{winPercentage}%</span>
+                            </li>
+                            <li className="list-group-item d-flex justify-content-between align-items-center">
+                                Rounds won
+                                <span className="badge bg-warning text-dark">{roundsWon}</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-                <div className="col-8 pt-3">
+                <div className="col-8">
                     <h3>Your past games: </h3>
                     {history.length > 0 ? (
                         <div className="container pt-3">

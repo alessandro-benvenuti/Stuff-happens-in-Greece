@@ -12,7 +12,7 @@ const Navhead = (props) => {
         if (darkMode) {
             document.documentElement.setAttribute("data-bs-theme", "dark");
         } else {
-            document.documentElement.setAttribute("data-bs-theme", "light"); // <-- Cambia qui!
+            document.documentElement.setAttribute("data-bs-theme", "light"); 
         }
     }, [darkMode]);
 
@@ -23,7 +23,7 @@ const Navhead = (props) => {
 
                     <Link to="/" className="navbar-brand" href="#">
                         <img src="/src/assets/life_in_ancient_greece.png" alt="Logo" width="30" height="24" className="d-inline-block align-text-top" />
-                        Life in ancient Greece
+                        Stuff Happens in Greece
                     </Link>
 
                     <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">

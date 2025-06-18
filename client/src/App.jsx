@@ -5,6 +5,7 @@ import './App.css'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import Navhead from './components/navhead'
 import Homepage from './components/Homepage'
+import RulePage from './components/rulePage'
 import Cardpage from './components/cardpage'
 import MatchPage from './components/matchPage';
 import { LoginForm } from './components/authComponents'
@@ -20,7 +21,7 @@ function App() {
   const [user, setUser] = useState('');
 
 
-  const naigate = useNavigate();
+  const navigate = useNavigate();
 
 
   // login
@@ -32,6 +33,7 @@ function App() {
       setUser(user);
     }catch(err) {
       setMessage({msg: err, type: 'danger'});
+      throw err;    // rethrow the error so that the authComponents can handle it
     }
   };
 
@@ -55,7 +57,7 @@ function App() {
     await API.logOut();
     setLoggedIn(false);
     setMessage('');
-    naigate('/');
+    navigate('/');
   };
 
 
@@ -64,6 +66,7 @@ function App() {
       <Navhead loggedIn={loggedIn} handleLogout={handleLogout} user={user} />
       <Routes>
         <Route path="/" element={<Homepage />} />
+        <Route path="/rules" element={<RulePage />} />
         <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm handleLogin={handleLogin} />} />
         <Route path="/match/current" element={<MatchPage loggedIn={loggedIn} />} />
         <Route path="/profile" element={loggedIn ? <Profilepage user={user} /> : <Navigate replace to='/login' />} />
