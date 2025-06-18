@@ -14,15 +14,6 @@ const Homepage = () => {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    document.body.classList.add('homepage-no-scroll');            // used to avoid scrolling just when the homepage is displayed
-    document.documentElement.classList.add('homepage-no-scroll');
-    return () => {
-      document.body.classList.remove('homepage-no-scroll');
-      document.documentElement.classList.remove('homepage-no-scroll');
-    };
-  }, []);
-
 
   const bgImage = darkMode ? "/src/assets/night.jpeg" : "/src/assets/day.jpeg";
 

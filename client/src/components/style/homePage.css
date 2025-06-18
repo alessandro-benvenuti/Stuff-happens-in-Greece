@@ -67,9 +67,3 @@
   border-radius: 2rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
-
-/* Blocks scrolling */
-body.homepage-no-scroll, html.homepage-no-scroll {
-  overflow: hidden !important;
-  height: 100vh;
-}
