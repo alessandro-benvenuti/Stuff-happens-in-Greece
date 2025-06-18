@@ -56,7 +56,6 @@ const MatchPage = (props) => {
         setMatch(updatedMatch);
         setIsPlaying(true);
       } else {
-        console.log("cards: ", match.cards);
         const updatedMatch = await API.drawCardGuest(match.cards[0].cid, match.cards[1].cid, match.cards[2].cid);
         setMatch(updatedMatch);
         setIsPlaying(true);
@@ -171,6 +170,7 @@ function DisplayMatch({ match,
               </div>
               <SendSelectedForm 
                 selectedIdx={selectedIdx} 
+                setSelectedIdx={setSelectedIdx}
                 deckCards={deckCards} 
                 timeLeft={timeLeft} 
                 setIsPlaying={setIsPlaying}
@@ -355,13 +355,12 @@ async function sendChoiceToServer(prevState, formData) {
     result = await API.sendRoundChoiceGuest(lower, upper, allCards[3].cid);
   }
 
-  console.log("result: ", result);
-
   return {success: true, round: result.Round, match: result.Match, cards: result.Cards}; // Return success state
 }
 
-function SendSelectedForm({ selectedIdx, deckCards, timeLeft, setIsPlaying, matchId, setPreviousRound, setMatch, setShowWinModal, setWonCards, loggedIn, allCards }) {
+function SendSelectedForm({ selectedIdx, setSelectedIdx, deckCards, timeLeft, setIsPlaying, matchId, setPreviousRound, setMatch, setShowWinModal, setWonCards, loggedIn, allCards }) {
   // Funzione che invia selectedIdx al server
+  const [timeExpired, setTimeExpired] = useState(false);
   const [state, submit, isPending] = useActionState(
     async (prevState, formData) => sendChoiceToServer(prevState, formData),
     {success: false}
@@ -375,10 +374,18 @@ function SendSelectedForm({ selectedIdx, deckCards, timeLeft, setIsPlaying, matc
   }, [state.success, setIsPlaying]);
 
   useEffect(() => {
-    if(timeLeft === 0 && formRef.current) {
-      formRef.current.requestSubmit();
+    if(timeLeft === 0) {      // when the time expires we handle the case
+      setSelectedIdx(-1);     // set selectedIdx to -1, so the round is now lost
+      setTimeExpired(true);   // set timeExpired to true, so the form will be submitted
     }
-  }, [timeLeft]);
+  }, [timeLeft, setSelectedIdx]);
+
+  useEffect(() => {
+    if(timeExpired && formRef.current) {
+      formRef.current.requestSubmit();  // Submit the form when time expires
+      setTimeExpired(false);            // Reset timeExpired to false to avoid multiple submissions
+    }
+  }, [timeExpired]);
 
   useEffect(() => {
     if (state.success) {
@@ -392,7 +399,6 @@ function SendSelectedForm({ selectedIdx, deckCards, timeLeft, setIsPlaying, matc
       // Update the match
       if(state.match == "won") {
         setPreviousRound(null);
-        console.log("cards: ", state.cards);
         setWonCards(state.cards.filter(card => card && card.won === 1));
         setShowWinModal("won");
       }

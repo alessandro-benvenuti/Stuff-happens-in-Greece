@@ -44,7 +44,7 @@ const Profilepage = (props) => {
                                     let round = null;
                                     let result = null;
                                     if (idx < 3) {
-                                        round = "Initial card";
+                                        round = "";
                                         result = null;
                                     } else {
                                         round = `Round ${idx - 2}`;
@@ -58,6 +58,8 @@ const Profilepage = (props) => {
                                         <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
                                             <span className='me-2'>
                                                 {round && <span className="ms-2 badge bg-secondary">{round}</span>}
+                                            </span>
+                                            <span className='me-2'>
                                                 <strong> {card.name}</strong>
                                             </span>
                                             {result ? (
