@@ -19,7 +19,7 @@ const RulePage = () => {
     const circeCard = {
         picture: "/src/assets/circe.jpeg",
         name: "The Sorceress Circe turned you into a pig. At least you'll live an happy life (until someone puts you on the grill)",
-        value: 73
+        value: 56
     };
 
     return (
