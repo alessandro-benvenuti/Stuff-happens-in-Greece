@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import './style/homepage.css';
 
 const Homepage = (props) => {
-  const { darkMode } = props;
+  const { darkMode } = props; 
 
 
   const bgImage = darkMode ? "/src/assets/night.jpeg" : "/src/assets/day.jpeg";
