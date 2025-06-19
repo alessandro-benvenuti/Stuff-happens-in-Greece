@@ -3,19 +3,38 @@ import { Link, NavLink } from 'react-router';
 import './style/rulePage.css';
 import './style/matchPage.css';
 
-function displayCard(card) {
+function displayCard(card, theme = "light") {
+  const cardTheme = theme === "dark" ? "my-card-dark" : "my-card-light";
   return (
-    <div className="card p-0" style={{ width: "20rem" }}>
-      <img src={card.picture} className="card-img-top" alt={card.name} />
-      <div className="card-body">
-        <h5 className="card-title">{card.name}</h5>
-        <p className="card-text">{card.value !== undefined ? `Value: ${card.value}` : 'Value: ???'}</p>
+    <div className={`my-card ${cardTheme}`} key={card.CID || card.name}>
+      <img src={card.picture.startsWith('/') ? card.picture : `${SERVER_URL}/images/${card.picture}`} className="my-card-img" alt={card.name} />
+      <div className="my-card-title">{card.name}</div>
+      <div className="my-card-index">
+        <svg width="80" height="40" viewBox="0 0 80 40">
+          <path
+            d="M10,35 A30,30 0 0,1 70,35"
+            fill="none"
+            stroke={theme === "dark" ? "#fff" : "#1976d2"}
+            strokeWidth="6"
+          />
+          <path
+            d="M10,35 A30,30 0 0,1 70,35"
+            fill="none"
+            stroke={theme === "dark" ? "#7a00cc" : "#222"}
+            strokeWidth="6"
+            strokeDasharray={`${(card.value / 100) * 94},94`}
+          />
+        </svg>
+        <div className="my-card-value">{card.value !== undefined ? card.value : "???"}</div>
+        <div className="my-card-label">MISFORTUNE INDEX</div>
       </div>
     </div>
   );
 }
 
-const RulePage = () => {
+const RulePage = (props) => {
+    const { darkMode } = props;
+    const theme = darkMode ? "dark" : "light";
     const circeCard = {
         picture: "/src/assets/circe.jpeg",
         name: "The Sorceress Circe turned you into a pig. At least you'll live an happy life (until someone puts you on the grill)",
@@ -46,7 +65,7 @@ const RulePage = () => {
 
             <div className="row justify-content-center mt-3 mb-3 align-items-center">
                 <div className="col-md-4 d-flex justify-content-center">
-                    {displayCard(circeCard)}
+                    {displayCard(circeCard, theme)}
                 </div>
                 <div className="col-md-6 text-start">
                     <h2>Playing a round</h2>

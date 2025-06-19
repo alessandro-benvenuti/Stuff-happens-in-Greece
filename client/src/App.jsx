@@ -8,6 +8,7 @@ import Homepage from './components/Homepage'
 import RulePage from './components/rulePage'
 import Cardpage from './components/cardpage'
 import MatchPage from './components/matchPage';
+import NotFoundPage from './components/NotFoundPage';
 import { LoginForm } from './components/authComponents'
 import { useEffect } from 'react';
 import API from "./API/API.mjs";
@@ -20,6 +21,7 @@ function App() {
   const [message, setMessage] = useState('');
   const [user, setUser] = useState('');
 
+  const [darkMode, setDarkMode] = useState(true);
 
   const navigate = useNavigate();
 
@@ -63,13 +65,14 @@ function App() {
 
   return (
     <>
-      <Navhead loggedIn={loggedIn} handleLogout={handleLogout} user={user} />
+      <Navhead loggedIn={loggedIn} handleLogout={handleLogout} user={user} darkMode={darkMode} setDarkMode={setDarkMode}/>
       <Routes>
         <Route path="/" element={<Homepage />} />
-        <Route path="/rules" element={<RulePage />} />
+        <Route path="/rules" element={<RulePage darkMode={darkMode} />} />
         <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm handleLogin={handleLogin} />} />
-        <Route path="/match/current" element={<MatchPage loggedIn={loggedIn} />} />
+        <Route path="/match/current" element={<MatchPage loggedIn={loggedIn} darkMode={darkMode}/>} />
         <Route path="/profile" element={loggedIn ? <Profilepage user={user} /> : <Navigate replace to='/login' />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       
     </>

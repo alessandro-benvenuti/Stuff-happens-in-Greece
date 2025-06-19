@@ -43,7 +43,7 @@ const Profilepage = (props) => {
             hour12: false
         });
         return (
-            <div key={index} className="card mt-5">
+            <div key={index} className="mb-5 border rounded shadow">
                 <div className={"card-header" + (match.win === 1 ? " text-success" : " text-danger")}>
                     <h4>
                         {match.win === 1 ? "Victory" : "Defeat"}
@@ -99,9 +99,9 @@ const Profilepage = (props) => {
     return (
         <div className="container p-5">
             <div className="row">
-                <div className="col-4 mt-5">
+                <div className="col-4">
                     <h3>Your stats: </h3>
-                    <div className='container p-3'>
+                    <div className='container p-3 border rounded shadow'>
                         <ul className="list-group">
                             <li className="list-group-item d-flex justify-content-between align-items-center">
                                 Games played
@@ -125,7 +125,7 @@ const Profilepage = (props) => {
                 <div className="col-8">
                     <h3>Your past games: </h3>
                     {history.length > 0 ? (
-                        <div className="container pt-3">
+                        <div className="container">
                             {history.map(displayMatch)}
                         </div>
                     ) : (

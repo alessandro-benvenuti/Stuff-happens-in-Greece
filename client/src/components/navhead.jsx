@@ -4,17 +4,17 @@ import { Link, NavLink } from 'react-router';
 import { Button, Container, Navbar } from 'react-bootstrap';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { LogoutButton } from './authComponents.jsx';
+import '../App.css';
 
 const Navhead = (props) => {
-    const[darkMode, setDarkMode] = useState(true);
 
     useEffect(() => {
-        if (darkMode) {
+        if (props.darkMode) {
             document.documentElement.setAttribute("data-bs-theme", "dark");
         } else {
             document.documentElement.setAttribute("data-bs-theme", "light"); 
         }
-    }, [darkMode]);
+    }, [props.darkMode]);
 
     return (
         <>
@@ -32,36 +32,28 @@ const Navhead = (props) => {
                     <div className="collapse navbar-collapse" id="navbarNav">
                         <ul className="navbar-nav">
                             <li className="nav-item">
-                                <Link to="/rules" className="nav-link" href="#">
+                                <NavLink to="/rules" className="nav-link" href="#">
                                     Rules
-                                </Link>
+                                </NavLink>
                             </li>
-                            {/*
-                            <li className="nav-item">
-                                <Link to="/" className="nav-link disabled" href="#">
-                                    Leaderboards
-                                </Link>
-                            </li>
-                            */}
                             {props.loggedIn &&
                                 <li className="nav-item">
-                                    <Link to="/profile" className="nav-link" href="#">
+                                    <NavLink to="/profile" className="nav-link" href="#">
                                         Your profile
-                                    </Link>
+                                    </NavLink>
                                 </li>
                             }
-                            <li className="nav-item">
-                                <Link to="/" className="nav-link disabled" href="#">
-                                    News
-                                </Link>
-                            </li>
                             <li>
-                                <Button onClick={() => setDarkMode(oldMode => !oldMode)}>
-                                    { darkMode ? 
-                                        <i className="bi bi-brightness-high-fill" /> : 
-                                        <i className="bi bi-moon-stars-fill" />
+                                <button
+                                    className="icon-btn"
+                                    onClick={() => props.setDarkMode(oldMode => !oldMode)}
+                                    aria-label="Toggle theme"
+                                >
+                                    {props.darkMode
+                                        ? <i className="bi bi-brightness-high-fill" />
+                                        : <i className="bi bi-moon-stars-fill" />
                                     }
-                                </Button>
+                                </button>
                             </li>
                         </ul>
                     </div>
@@ -71,10 +63,10 @@ const Navhead = (props) => {
                             <span className="navbar-text me-2">
                                 Hi {props.user.username}!
                             </span>
-                            <LogoutButton logout={props.handleLogout} darkMode={darkMode} /> 
+                            <LogoutButton logout={props.handleLogout} darkMode={props.darkMode} /> 
                         </>
                     :
-                        <Link to='/login' className={`btn ${darkMode ? 'btn-outline-light' : 'btn-outline-dark'}`}>
+                        <Link to='/login' className={`btn ${props.darkMode ? 'btn-outline-light' : 'btn-outline-dark'}`}>
                             Login
                         </Link>
                     }

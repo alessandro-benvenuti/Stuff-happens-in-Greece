@@ -1,9 +1,83 @@
-/* Progress bar RTL: parte piena a destra e si svuota verso destra */
+/* Progress bar RTL: starts full and empties to the left */
 .progress-rtl {
   direction: rtl;
 }
 
-/* Transizione fluida della larghezza */
+/* Smooth width transition */
 .progress-bar {
   transition: width 1s linear;
+}
+
+.my-card,
+.card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0 auto 1rem auto;
+  box-sizing: border-box;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  overflow: hidden;
+  border: 2px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+  background: #fff;
+  color: #222;
+}
+
+.my-card-light {
+  background: #fff;
+  color: #222;
+  border-color: #e0e0e0;
+}
+.my-card-dark {
+  background: #222;
+  color: #fff;
+  border-color: #444;
+}
+
+.my-card-img,
+.card-img-top {
+  width: 100%;
+  object-fit: contain;
+  /* background: #f8f9fa; */
+  border-radius: 16px 16px 0 0;
+}
+
+.my-card-title,
+.card-title {
+  font-weight: bold;
+  font-size: 1rem;
+  margin: 0.5rem 0 0.2rem 0;
+  text-align: center;
+}
+
+.my-card-index {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.my-card-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: -1.2rem;
+}
+
+.my-card-label {
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  color: #888;
+}
+
+.card-body {
+  width: 100%;
+  padding: 0.5rem;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }

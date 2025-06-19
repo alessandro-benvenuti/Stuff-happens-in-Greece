@@ -12,6 +12,8 @@
     - [Table: USER](#table-user)
   - [Main React Components](#main-react-components)
   - [Screenshot](#screenshot)
+    - [Gameplay Example](#gameplay-example)
+    - [Profile Page](#profile-page)
   - [Users Credentials](#users-credentials)
 
 
@@ -24,7 +26,7 @@
   - Authenticated: the user can see a covered card at the top of the page while the cards in his hand at the bottom. Near the covered card there is a window showing the state of the game, displaying for each round if it won, lost or it is still to be played, and a button to start a new round. When pressing this button the timer is shown and the user has 30 seconds to choose where to place the card. After confirming his choice he either wins or lose the round. Also if the timer runs out he automatically loses. If he wins 3 rounds he wins the game and he can start a new one or return to the homepage, but if he loses three times he also loses the game. After completing the game a window appears showing the cards he won.
   - Unauthenticated: the user can see a covered card at the top of the page while the cards in his hand at the bottom. Near the covered card there is a window showing a button to start a new round. When pressing this button the timer is shown and the user has 30 seconds to choose where to place the card. After confirming his choice he either wins or lose the round. Since he is an unauthenticated user a window appears telling that the demno ends here and that he has to login to continue playing.
 - Route `/profile`: This route can only be accessed by logged in users and leads to the profile page of the user. The page shows the statistics based on the past matches of the user and the hystory of all the games he played, displaying for each one the cards he won and the ones he lost.
-
+- Route `*`: default 404 route.
 
 ## API Server
 
@@ -234,6 +236,7 @@
   - used in Route `/`
   - It shows the homepage with the button to start playing
   - Welcomes the user
+
 - `RulePage` (in `rulePage.jsx`):
   - used in Route `/rules`
   - It displays the game rules with images and explanations.
@@ -314,10 +317,21 @@
   - It renders the logout button.
   - Allows the user to log out.
 
+- `NotFoundPage` (in `notFoundPage.jsx`):
+  - used in Route `*`
+  - It displays a simple 404 error message when the user navigates to a non-existent route.
+  - Provides a button to return to the homepage.
+
 
 ## Screenshot
 
-![Screenshot](./img/screenshot.jpg)
+### Gameplay Example
+
+![Gameplay Example](./img/Screenshot_while_playing.png)
+
+### Profile Page
+
+![Profile Page](./img/Screenshot_history.png)
 
 ## Users Credentials
 

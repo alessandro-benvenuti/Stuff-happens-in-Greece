@@ -9,7 +9,7 @@ import './style/matchPage.css';
 const MatchPage = (props) => {
   // into the props we have loggedIn which tells if the user is logged in or not
   // we need to differentiate between the logged in user and the guest user
-  const { loggedIn } = props;
+  const { loggedIn, darkMode } = props;
 
   const [match, setMatch] = useState(null);
 
@@ -80,16 +80,14 @@ const MatchPage = (props) => {
   }, [isPlaying, timeLeft]);    // eaxch time the state changes, we check if we need to update the timer
 
   return (
-    <div>
-      <h1>{match ? `Match ID: ${match.MID}` : 'No current match'}</h1>
-      <h2>{match ? `User ID: ${match.UID}` : ''}</h2>
-      <h3>{match ? `Timestamp: ${new Date(match.Timestamp).toLocaleString()}` : ''}</h3>
+    <div className='container pt-5 pb-5'>
       <WinModal
         showWinModal={showWinModal}
         wonCards={wonCards}
         setMatch={setMatch}
         setShowWinModal={setShowWinModal}
         loggedIn={loggedIn}
+        theme={darkMode ? "dark" : "light"} // Pass the theme based on darkMode prop
       />
       {match && <DisplayMatch 
         match={match}
@@ -108,6 +106,7 @@ const MatchPage = (props) => {
         shownCards={wonCards}
         setWonCards={setWonCards}
         loggedIn={loggedIn}
+        theme={darkMode ? "dark" : "light"} // Pass the theme based on darkMode prop
       />}
     </div>
   );
@@ -128,7 +127,9 @@ function DisplayMatch({ match,
    setShowWinModal, 
    shownCards, 
    setWonCards,
-   loggedIn }) {
+   loggedIn,
+   theme = "light" // default theme is light
+}) {
   const deckCards = match.cards
     .filter(card => card !== undefined)
     .filter(card => card.value !== -1 && card.won == 1)
@@ -145,8 +146,8 @@ function DisplayMatch({ match,
     <div className="container">
       <div className="row align-items-start">
         <div className="col-5 p-0 m-0"/>
-        <div className="col-2">
-          {isPlaying ? displayCard(last_card) : displayCoveredCard()}
+        <div className="col-3">
+          {isPlaying ? displayCard(last_card, theme) : displayCoveredCard(theme)}
         </div>
         <div className="col-4 border p-3">
           {loggedIn && displayPastRounds(match.cards) /*show the previous rounds only if the user is logged in*/}
@@ -207,7 +208,7 @@ function DisplayMatch({ match,
 
       <div className="container-fluid mt-5 mb-5">
         <h4>Your Deck:</h4>
-        {displayDeckCards(deckCards, selectedIdx, setSelectedIdx, isPlaying)}
+        {displayDeckCards(deckCards, selectedIdx, setSelectedIdx, isPlaying, theme)}
       </div>
 
 
@@ -249,7 +250,7 @@ function displayPastRounds(cards){
   );
 }
 
-function displayDeckCards(deckCards, selectedIdx, setSelectedIdx, isPlaying) {
+function displayDeckCards(deckCards, selectedIdx, setSelectedIdx, isPlaying, theme) {
   return (
     <div className="row align-items-center justify-content-center">
       {/* Prima colonna vuota */}
@@ -259,8 +260,8 @@ function displayDeckCards(deckCards, selectedIdx, setSelectedIdx, isPlaying) {
       {deckCards
         .map((card, idx) => (
           <React.Fragment key={idx + 1}>
-            <div className="col-2">
-              {displayCard(card)}
+            <div className="col-3">
+              {displayCard(card, theme)}
             </div>
             <div className="col-1">
               <EmptyColButton idx={idx + 1} selectedIdx={selectedIdx} isPlaying={isPlaying} setSelectedIdx={setSelectedIdx} />
@@ -296,24 +297,48 @@ function EmptyColButton({ idx, selectedIdx, setSelectedIdx, isPlaying }) {
     );
 }
 
-function displayCard(card) {
+function displayCard(card, theme = "light") {
+  // theme: "light" or "dark"
+  const cardTheme = theme === "dark" ? "my-card-dark" : "my-card-light";
   return (
-    <div className="card p-0" key={card.CID}>
-      <img src={`${SERVER_URL}/images/${card.picture}`} className="card-img-top" alt={card.Name} />
-      <div className="card-body">
-        <h5 className="card-title">{card.name}</h5>
-        <p className="card-text">{card.value !== -1 ? `Value: ${card.value}` : 'Value: ???'}</p>
+    <div className={`my-card ${cardTheme}`} key={card.CID}>
+      <img src={`${SERVER_URL}/images/${card.picture}`} className="my-card-img" alt={card.name} />
+      <div className="my-card-title">{card.name}</div>
+      <div className="my-card-index">
+        <svg width="80" height="40" viewBox="0 0 80 40">
+          <path
+            d="M10,35 A30,30 0 0,1 70,35"
+            fill="none"
+            stroke={theme === "dark" ? "#fff" : "#1976d2"}
+            strokeWidth="6"
+          />
+          <path
+            d="M10,35 A30,30 0 0,1 70,35"
+            fill="none"
+            stroke={theme === "dark" ? "#7a00cc" : "#222"}
+            strokeWidth="6"
+            strokeDasharray={`${(card.value / 100) * 94},94`}
+          />
+        </svg>
+        <div className="my-card-value">{card.value !== -1 ? card.value : "???"}</div>
+        <div className="my-card-label">MISFORTUNE INDEX</div>
       </div>
     </div>
-  )
+  );
 }
 
-function displayCoveredCard() {
+function displayCoveredCard(theme = "light") {
+  const cardTheme = theme === "dark" ? "my-card-dark" : "my-card-light";
   return (
-    <div className="card" key={'covered'}>
-      <img src='/src/assets/life_in_ancient_greece.png' className="card-img-top" alt={"covered card"} />
+    <div className={`my-card ${cardTheme}`} key={'covered'}>
+      <img
+        src='/src/assets/life_in_ancient_greece.png'
+        className="my-card-img"
+        alt="covered card"
+        style={{ width: "100%", height: "180px", objectFit: "contain" }}
+      />
     </div>
-  )
+  );
 }
 
 async function sendChoiceToServer(prevState, formData) {
@@ -436,7 +461,7 @@ function SendSelectedForm({ selectedIdx, setSelectedIdx, deckCards, timeLeft, se
   );
 }
 
-function WinModal({ showWinModal, wonCards, setMatch, setShowWinModal, loggedIn }) {
+function WinModal({ showWinModal, wonCards, setMatch, setShowWinModal, loggedIn, theme = "light" }) {
   if (!showWinModal) return null;
 
   const navigate = useNavigate();
@@ -475,13 +500,7 @@ function WinModal({ showWinModal, wonCards, setMatch, setShowWinModal, loggedIn 
               <div className="row">
                 {wonCards.map((card, idx) => (
                   <div className="col-4 mb-3" key={idx}>
-                    <div className="card">
-                      <img src={`${SERVER_URL}/images/${card.picture}`} className="card-img-top" alt={card.name} />
-                      <div className="card-body">
-                        <h6 className="card-title">{card.name}</h6>
-                        <p className="card-text">Value: {card.value}</p>
-                      </div>
-                    </div>
+                    {displayCard(card, theme)}
                   </div>
                 ))}
               </div>
