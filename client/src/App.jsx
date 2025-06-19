@@ -67,7 +67,7 @@ function App() {
     <>
       <Navhead loggedIn={loggedIn} handleLogout={handleLogout} user={user} darkMode={darkMode} setDarkMode={setDarkMode}/>
       <Routes>
-        <Route path="/" element={<Homepage />} />
+        <Route path="/" element={<Homepage darkMode={darkMode} />} />
         <Route path="/rules" element={<RulePage darkMode={darkMode} />} />
         <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm handleLogin={handleLogin} />} />
         <Route path="/match/current" element={<MatchPage loggedIn={loggedIn} darkMode={darkMode}/>} />

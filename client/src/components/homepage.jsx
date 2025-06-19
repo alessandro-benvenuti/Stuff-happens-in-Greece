@@ -3,16 +3,8 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import './style/homepage.css';
 
-const Homepage = () => {
-  const [darkMode, setDarkMode] = useState(document.documentElement.getAttribute("data-bs-theme") === "dark");
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setDarkMode(document.documentElement.getAttribute("data-bs-theme") === "dark");
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-bs-theme"] });
-    return () => observer.disconnect();
-  }, []);
+const Homepage = (props) => {
+  const { darkMode } = props;
 
 
   const bgImage = darkMode ? "/src/assets/night.jpeg" : "/src/assets/day.jpeg";
