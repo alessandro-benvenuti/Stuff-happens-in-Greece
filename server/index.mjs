@@ -111,6 +111,8 @@ app.delete('/api/sessions/current', (req, res) => {
 
 
 // app routes
+/*
+
 app.get('/', (req, res) => {
   res.send('Hello, World!');
 });
@@ -135,7 +137,7 @@ app.get('/api/cards/:id', async (req, res) => {
   }
 });
 
-/*
+
 app.post('/api/matches', isLoggedIn, async (req, res) => {
   const { uid } = req.user.id;
   const cards = [];
@@ -335,6 +337,7 @@ app.post('/api/matches/:id/', isLoggedIn, async (req, res) => {
       match.C8
     ].filter(card => card !== null && card !== undefined);
 
+    const cardObjs = await Promise.all(cards.map(cid => getCardById(cid)));
     const lastCard = await getCardById(cards[cards.length - 1]);
 
     const lastRound = cards.length; // the first 3 cards are the initial ones
@@ -343,7 +346,34 @@ app.post('/api/matches/:id/', isLoggedIn, async (req, res) => {
       return res.status(404).send('Last card not found');
     }
 
-    if( lastCard.Value >= lower && lastCard.Value <= upper) {
+    // Find the previous cards and their values, excluding the last drawn card
+    let prevCards = [];
+    for (let i = 0; i < cards.length - 1; i++) {
+      if (i < 3) {
+        prevCards.push(cardObjs[i]);
+      } else if (
+        (i === 3 && match.W4 === 1) ||
+        (i === 4 && match.W5 === 1) ||
+        (i === 5 && match.W6 === 1) ||
+        (i === 6 && match.W7 === 1) ||
+        (i === 7 && match.W8 === 1)
+      ) {
+        prevCards.push(cardObjs[i]);
+      }
+    }
+
+    // Used to vcaliate the input of the user
+    // we select all the cards that are lower or higher than the last card
+    const lowerCandidates = prevCards.filter(c => c.Value < lastCard.Value).map(c => c.Value);
+    const upperCandidates = prevCards.filter(c => c.Value > lastCard.Value).map(c => c.Value);
+
+    // Find the maximum of lower candidates and minimum of upper candidates
+    const maxLower = lowerCandidates.length > 0 ? Math.max(...lowerCandidates) : 0;
+    const minUpper = upperCandidates.length > 0 ? Math.min(...upperCandidates) : 100;
+
+    if( lastCard.Value >= lower && lastCard.Value <= upper
+       && maxLower == lower && minUpper == upper                  // check if the selected indexes are valid, if they are not it means that the choice is invalid and probably the user tried to cheat
+      ) {        
       // the round is won
       const updated_match = await updateRoundWin(matchId, lastRound, 1);
       // if there are 3 round won then the match is won
@@ -353,7 +383,6 @@ app.post('/api/matches/:id/', isLoggedIn, async (req, res) => {
           count++;
         }
       }
-      console.log("match: ", updated_match);
       if(count >= 6) {
         await updateMatchWin(matchId, 1);
         return res.status(200).json({
