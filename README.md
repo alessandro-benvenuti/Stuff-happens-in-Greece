@@ -5,15 +5,17 @@
 - [Exam #1: "Gioco della Sfortuna"](#exam-1-gioco-della-sfortuna)
   - [Student: s343748 Benvenuti Alessandro](#student-s343748-benvenuti-alessandro)
   - [React Client Application Routes](#react-client-application-routes)
+  - [Screenshots](#screenshots)
+    - [Homepage](#homepage)
+    - [Gameplay Example](#gameplay-example)
+    - [Profile Page](#profile-page)
+  - [How to run the project](#how-to-run-the-project)
   - [API Server](#api-server)
   - [Database Tables](#database-tables)
     - [Table: CARD](#table-card)
     - [Table: MATCH](#table-match)
     - [Table: USER](#table-user)
   - [Main React Components](#main-react-components)
-  - [Screenshot](#screenshot)
-    - [Gameplay Example](#gameplay-example)
-    - [Profile Page](#profile-page)
   - [Users Credentials](#users-credentials)
 
 
@@ -27,6 +29,34 @@
   - Unauthenticated: the user can see a covered card at the top of the page while the cards in his hand at the bottom. Near the covered card there is a window showing a button to start a new round. When pressing this button the timer is shown and the user has 30 seconds to choose where to place the card. After confirming his choice he either wins or lose the round. Since he is an unauthenticated user a window appears telling that the demno ends here and that he has to login to continue playing.
 - Route `/profile`: This route can only be accessed by logged in users and leads to the profile page of the user. The page shows the statistics based on the past matches of the user and the hystory of all the games he played, displaying for each one the cards he won and the ones he lost.
 - Route `*`: default 404 route.
+## Screenshots
+
+### Homepage
+![Gameplay Example](./img/Screenshot_homepage.png)
+
+### Gameplay Example
+
+![Gameplay Example](./img/Screenshot_while_playing.png)
+
+### Profile Page
+
+![Profile Page](./img/Screenshot_history.png)
+
+## How to run the project
+Open a Terminal for the Server and use the following commands
+```bash
+cd server
+npm install
+nodemon index.mjs
+```
+
+Then open a new Terinal to run the client
+```bash
+cd client
+npm install
+npm run dev
+```
+
 
 ## API Server
 
@@ -322,16 +352,6 @@
   - It displays a simple 404 error message when the user navigates to a non-existent route.
   - Provides a button to return to the homepage.
 
-
-## Screenshot
-
-### Gameplay Example
-
-![Gameplay Example](./img/Screenshot_while_playing.png)
-
-### Profile Page
-
-![Profile Page](./img/Screenshot_history.png)
 
 ## Users Credentials
 

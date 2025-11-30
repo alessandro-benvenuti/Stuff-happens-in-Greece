@@ -35,6 +35,7 @@ export const getCurrentMatch = async () => {
 };
 
 export const drawCard = async (matchId) => {
+  await new Promise(resolve => setTimeout(resolve, 3000));
   try {
     const response = await fetch(`${SERVER_URL}/api/matches/${matchId}`, {
       method: 'PUT',

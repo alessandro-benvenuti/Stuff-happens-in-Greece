@@ -29,6 +29,8 @@ const MatchPage = (props) => {
   const [showWinModal, setShowWinModal] = useState(null);
   const [wonCards, setWonCards] = useState([]);
 
+  const [waitingForServer, setWaitingForServer] = useState(false);
+
   useEffect(() => {     // the component is mounted with the page
     const fetchMatch = async () => {
       try {
@@ -52,6 +54,8 @@ const MatchPage = (props) => {
   // Function to draw a new card
   const handleDrawCard = async () => {
     try {
+      if (waitingForServer) return; // Prevent multiple clicks while waiting for server response
+      setWaitingForServer(true);
       if(loggedIn){
         const updatedMatch = await API.drawCard(match.MID);
         setMatch(updatedMatch);
@@ -61,6 +65,7 @@ const MatchPage = (props) => {
         setMatch(updatedMatch);
         setIsPlaying(true);
       }
+      setWaitingForServer(false);
     } catch (error) {
       setMatch(null);
     }
@@ -70,6 +75,7 @@ const MatchPage = (props) => {
   useEffect(() => {
     if (!isPlaying) return;
     if (timeLeft === 0) return;
+    if (waitingForServer) return; // Prevent timer updates while waiting for server response
 
     // wait one seconda and then update the time left
     const timer = setTimeout(() => {
@@ -77,7 +83,7 @@ const MatchPage = (props) => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [isPlaying, timeLeft]);    // eaxch time the state changes, we check if we need to update the timer
+  }, [isPlaying, timeLeft, waitingForServer]);    // eaxch time the state changes, we check if we need to update the timer
 
   return (
     <div className='container pt-5 pb-5'>
@@ -107,6 +113,7 @@ const MatchPage = (props) => {
         setWonCards={setWonCards}
         loggedIn={loggedIn}
         theme={darkMode ? "dark" : "light"} // Pass the theme based on darkMode prop
+        waitingForServer={waitingForServer}
       />}
     </div>
   );
@@ -128,7 +135,8 @@ function DisplayMatch({ match,
    shownCards, 
    setWonCards,
    loggedIn,
-   theme = "light" // default theme is light
+   theme = "light",   // default theme is light
+  waitingForServer 
 }) {
   const deckCards = match.cards
     .filter(card => card !== undefined)
@@ -183,6 +191,7 @@ function DisplayMatch({ match,
                 setWonCards={setWonCards}
                 loggedIn={loggedIn}
                 allCards={match.cards}
+                waitingForServer={waitingForServer}
               />
             </>
           ) : (
@@ -384,7 +393,7 @@ async function sendChoiceToServer(prevState, formData) {
   return {success: true, round: result.Round, match: result.Match, cards: result.Cards}; // Return success state
 }
 
-function SendSelectedForm({ selectedIdx, setSelectedIdx, deckCards, timeLeft, setIsPlaying, matchId, setPreviousRound, setMatch, setShowWinModal, setWonCards, loggedIn, allCards }) {
+function SendSelectedForm({ selectedIdx, setSelectedIdx, deckCards, timeLeft, setIsPlaying, matchId, setPreviousRound, setMatch, setShowWinModal, setWonCards, loggedIn, allCards, waitingForServer }) {
   // Funzione che invia selectedIdx al server
   const [timeExpired, setTimeExpired] = useState(false);
   const [state, submit, isPending] = useActionState(
@@ -454,7 +463,7 @@ function SendSelectedForm({ selectedIdx, setSelectedIdx, deckCards, timeLeft, se
       <input type="hidden" name="loggedIn" value={loggedIn} />
       <input type="hidden" name="deckCards" value={JSON.stringify(deckCards)} />
       <input type="hidden" name="allCards" value={JSON.stringify(allCards)} />
-      <button type="submit" className="btn btn-primary" disabled={isPending || selectedIdx === -1}>
+      <button type="submit" className="btn btn-primary" disabled={isPending || selectedIdx === -1 || waitingForServer}>
         Confirm
       </button>
     </form>
