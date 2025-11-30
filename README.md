@@ -1,15 +1,17 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/uNTgnFHD)
-# Exam #1: "Gioco della Sfortuna"
+# Stuff Happens in Greece
 ## Student: s343748 Benvenuti Alessandro
 
-- [Exam #1: "Gioco della Sfortuna"](#exam-1-gioco-della-sfortuna)
+- [Stuff Happens in Greece](#stuff-happens-in-greece)
   - [Student: s343748 Benvenuti Alessandro](#student-s343748-benvenuti-alessandro)
+  - [📋 Overview](#-overview)
+  - [✨ Key Features](#-key-features)
+  - [🛠️ Architecture](#️-architecture)
+  - [🚀 How to Run Locally](#-how-to-run-locally)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+  - [📸 Screenshots](#-screenshots)
   - [React Client Application Routes](#react-client-application-routes)
-  - [Screenshots](#screenshots)
-    - [Homepage](#homepage)
-    - [Gameplay Example](#gameplay-example)
-    - [Profile Page](#profile-page)
-  - [How to run the project](#how-to-run-the-project)
   - [API Server](#api-server)
   - [Database Tables](#database-tables)
     - [Table: CARD](#table-card)
@@ -17,6 +19,110 @@
     - [Table: USER](#table-user)
   - [Main React Components](#main-react-components)
   - [Users Credentials](#users-credentials)
+
+![Homepage](./img/Screenshot_homepage.png)
+
+## 📋 Overview
+This project is a single-player web adaptation of the popular board game *"Shit Happens"*. 
+Users challenge the computer by ranking "unfortunate events" (cards) based on a "misfortune index" (1-100). The goal is to correctly place cards in the growing timeline before the 30-second timer runs out.
+
+> **Tech Stack:** React, Node.js (Express), SQLite, Passport.js, Bootstrap.
+
+## ✨ Key Features
+* **Interactive Gameplay:** Selection interface to rank cards logic within a specific time limit (30s).
+* **RESTful Architecture:** Clear separation between Client (React) and Server (Node.js API).
+* **Authentication:** Secure login/logout system using `Passport.js` with hashed passwords and session cookies.
+* **Game History:** Persistent storage of user matches and scores using SQLite.
+* **Smart Logic:** The backend generates random cards ensuring unique indices and validates moves securely server-side.
+
+## 🛠️ Architecture
+The application follows the **Two-Server Pattern** typical of modern SPAs:
+* **Frontend:** React (Vite/CRA) managing the game state, timer, and UI interactions.
+* **Backend:** Node.js + Express serving REST APIs.
+* **Database:** SQLite for lightweight, file-based data persistence.
+
+```mermaid
+graph TD
+    %% --- CLIENT SIDE (React) ---
+    subgraph Client_Side ["💻 Client (Browser)"]
+        direction TB
+        ReactApp["<b>React SPA</b><br/>(Vite / CRA)"]
+        
+        %% Logica interna al client
+        ReactApp -- "Manage State" --> GameState["Context / Hooks<br/>(Timer & Game Logic)"]
+        ReactApp -- "Routing" --> Router["React Router<br/>(Auth & Public Routes)"]
+    end
+
+    %% --- NETWORK (HTTP/JSON) ---
+    subgraph Network_Zone ["☁️ Network (HTTP / CORS)"]
+        %% La freccia indica lo scambio dati
+        ReactApp -- "JSON Requests<br/>(Session Cookie)" --> ExpressAPI(("REST API<br/>(Express)"))
+    end
+
+    %% --- SERVER SIDE (Node.js) ---
+    subgraph Server_Side ["⚙️ Server (Node.js LTS)"]
+        direction TB
+        
+        %% Middleware di Auth
+        ExpressAPI --> AuthLayer["<b>Passport.js</b><br/>(Session Strategy)"]
+        
+        %% Logica di Business
+        AuthLayer --> GameCtrl["Game Controller<br/>(Validation & Random)"]
+        
+        %% Database e Files
+        GameCtrl -- "Query / Transact" --> SQLite[("<br/>&nbsp;&nbsp;SQLite DB&nbsp;&nbsp;<br/>(Users & Matches)<br/>&nbsp;")]
+        GameCtrl -- "Serve Static" --> Assets[("Card Images<br/>(Public Folder)")]
+    end
+
+    %% --- STILI GRAFICI (Dark Mode Friendly) ---
+    
+    %% Stile Blu per React (Frontend)
+    classDef react fill:#235,stroke:#61dafb,stroke-width:2px,color:#fff;
+    class ReactApp,GameState,Router react;
+
+    %% Stile Verde per Node (Backend)
+    classDef node fill:#252,stroke:#8c8,stroke-width:2px,color:#fff;
+    class AuthLayer,GameCtrl node;
+
+    %% Stile Grigio per Storage
+    classDef storage fill:#444,stroke:#888,color:#fff;
+    class SQLite,Assets storage;
+
+    %% Stile Trasparente per la rete
+    style Network_Zone fill:transparent,stroke:#666,stroke-dasharray: 5 5,color:#fff;
+```
+
+## 🚀 How to Run Locally
+
+### Prerequisites
+* Node.js (v22.x or later)
+* npm
+
+### Installation
+1.  **Clone the repo**
+    ```bash
+    git clone [https://github.com/tuo-user/misfortune-ranking-game.git](https://github.com/tuo-user/misfortune-ranking-game.git)
+    cd misfortune-ranking-game
+    ```
+
+2.  **Setup Server**
+    ```bash
+    cd server
+    npm install
+    nodemon index.mjs
+    ```
+
+3.  **Setup Client** (Open a new terminal)
+    ```bash
+    cd client
+    npm install
+    npm run dev
+    ```
+
+## 📸 Screenshots
+| Game Interface | User History |
+|:---:|:---:|
+| ![Gameplay](./img/Screenshot_while_playing.png) | ![History](./img/Screenshot_history.png) |
 
 
 ## React Client Application Routes
@@ -29,34 +135,6 @@
   - Unauthenticated: the user can see a covered card at the top of the page while the cards in his hand at the bottom. Near the covered card there is a window showing a button to start a new round. When pressing this button the timer is shown and the user has 30 seconds to choose where to place the card. After confirming his choice he either wins or lose the round. Since he is an unauthenticated user a window appears telling that the demno ends here and that he has to login to continue playing.
 - Route `/profile`: This route can only be accessed by logged in users and leads to the profile page of the user. The page shows the statistics based on the past matches of the user and the hystory of all the games he played, displaying for each one the cards he won and the ones he lost.
 - Route `*`: default 404 route.
-## Screenshots
-
-### Homepage
-![Gameplay Example](./img/Screenshot_homepage.png)
-
-### Gameplay Example
-
-![Gameplay Example](./img/Screenshot_while_playing.png)
-
-### Profile Page
-
-![Profile Page](./img/Screenshot_history.png)
-
-## How to run the project
-Open a Terminal for the Server and use the following commands
-```bash
-cd server
-npm install
-nodemon index.mjs
-```
-
-Then open a new Terinal to run the client
-```bash
-cd client
-npm install
-npm run dev
-```
-
 
 ## API Server
 
