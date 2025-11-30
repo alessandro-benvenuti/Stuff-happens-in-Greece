@@ -2,23 +2,23 @@
 # Stuff Happens in Greece
 ## Student: s343748 Benvenuti Alessandro
 
-- [Stuff Happens in Greece](#stuff-happens-in-greece)
-  - [Student: s343748 Benvenuti Alessandro](#student-s343748-benvenuti-alessandro)
-  - [Overview](#-overview)
-  - [Key Features](#-key-features)
-  - [Architecture](#️-architecture)
-  - [How to Run Locally](#-how-to-run-locally)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-  - [Screenshots](#-screenshots)
-  - [React Client Application Routes](#react-client-application-routes)
-  - [API Server](#api-server)
-  - [Database Tables](#database-tables)
-    - [Table: CARD](#table-card)
-    - [Table: MATCH](#table-match)
-    - [Table: USER](#table-user)
-  - [Main React Components](#main-react-components)
-  - [Users Credentials](#users-credentials)
+
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Architecture](#️-architecture)
+- [How to Run Locally](#-how-to-run-locally)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Screenshots](#-screenshots)
+- [React Client Application Routes](#react-client-application-routes)
+- [API Server](#api-server)
+- [Database Tables](#database-tables)
+  - [Table: CARD](#table-card)
+  - [Table: MATCH](#table-match)
+  - [Table: USER](#table-user)
+- [Main React Components](#main-react-components)
+- [Users Credentials](#users-credentials)
+- [Authors](#authors)
 
 ![Homepage](./img/Screenshot_homepage.png)
 
@@ -435,3 +435,8 @@ graph TD
 
 - username: "root", password: "rootpassword"
 - username: "asterix", password: "obelix"
+
+## Authors
+* **Alessandro BENVENUTI** - *Full Stack Development*
+
+*Developed as a capstone project for the Web Applications I course at Politecnico di Torino.*
