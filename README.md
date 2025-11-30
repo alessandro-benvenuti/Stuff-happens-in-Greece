@@ -3,13 +3,13 @@
 ## Student: s343748 Benvenuti Alessandro
 
 
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [Architecture](#️-architecture)
-- [How to Run Locally](#-how-to-run-locally)
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Architecture](architecture)
+- [How to Run Locally](#how-to-run-locally)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
-- [Screenshots](#-screenshots)
+- [Screenshots](#screenshots)
 - [React Client Application Routes](#react-client-application-routes)
 - [API Server](#api-server)
 - [Database Tables](#database-tables)
