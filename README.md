@@ -4,13 +4,13 @@
 
 - [Stuff Happens in Greece](#stuff-happens-in-greece)
   - [Student: s343748 Benvenuti Alessandro](#student-s343748-benvenuti-alessandro)
-  - [📋 Overview](#-overview)
-  - [✨ Key Features](#-key-features)
-  - [🛠️ Architecture](#️-architecture)
-  - [🚀 How to Run Locally](#-how-to-run-locally)
+  - [Overview](#-overview)
+  - [Key Features](#-key-features)
+  - [Architecture](#️-architecture)
+  - [How to Run Locally](#-how-to-run-locally)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
-  - [📸 Screenshots](#-screenshots)
+  - [Screenshots](#-screenshots)
   - [React Client Application Routes](#react-client-application-routes)
   - [API Server](#api-server)
   - [Database Tables](#database-tables)
@@ -22,20 +22,20 @@
 
 ![Homepage](./img/Screenshot_homepage.png)
 
-## 📋 Overview
+## Overview
 This project is a single-player web adaptation of the popular board game *"Shit Happens"*. 
 Users challenge the computer by ranking "unfortunate events" (cards) based on a "misfortune index" (1-100). The goal is to correctly place cards in the growing timeline before the 30-second timer runs out.
 
 > **Tech Stack:** React, Node.js (Express), SQLite, Passport.js, Bootstrap.
 
-## ✨ Key Features
+## Key Features
 * **Interactive Gameplay:** Selection interface to rank cards logic within a specific time limit (30s).
 * **RESTful Architecture:** Clear separation between Client (React) and Server (Node.js API).
 * **Authentication:** Secure login/logout system using `Passport.js` with hashed passwords and session cookies.
 * **Game History:** Persistent storage of user matches and scores using SQLite.
 * **Smart Logic:** The backend generates random cards ensuring unique indices and validates moves securely server-side.
 
-## 🛠️ Architecture
+## Architecture
 The application follows the **Two-Server Pattern** typical of modern SPAs:
 * **Frontend:** React (Vite/CRA) managing the game state, timer, and UI interactions.
 * **Backend:** Node.js + Express serving REST APIs.
@@ -92,7 +92,7 @@ graph TD
     style Network_Zone fill:transparent,stroke:#666,stroke-dasharray: 5 5,color:#fff;
 ```
 
-## 🚀 How to Run Locally
+## How to Run Locally
 
 ### Prerequisites
 * Node.js (v22.x or later)
@@ -119,7 +119,7 @@ graph TD
     npm run dev
     ```
 
-## 📸 Screenshots
+## Screenshots
 | Game Interface | User History |
 |:---:|:---:|
 | ![Gameplay](./img/Screenshot_while_playing.png) | ![History](./img/Screenshot_history.png) |
