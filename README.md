@@ -41,7 +41,7 @@ The application follows the **Two-Server Pattern** typical of modern SPAs:
 * **Database:** SQLite for lightweight, file-based data persistence.
 
 ```mermaid
-graph TD
+flowchart TD
     %% --- CLIENT SIDE (React) ---
     subgraph Client_Side ["💻 Client (Browser)"]
         direction TB
@@ -53,42 +53,42 @@ graph TD
     end
 
     %% --- NETWORK (HTTP/JSON) ---
+    %% TRUCCO: Ho aumentato la lunghezza della freccia qui sotto aggiungendo trattini (---->)
+    %% Questo spinge il nodo ExpressAPI più lontano fisicamente dal nodo ReactApp
+    
     subgraph Network_Zone ["☁️ Network (HTTP / CORS)"]
-        %% La freccia indica lo scambio dati
-        ReactApp -- "JSON Requests<br/>(Session Cookie)" --> ExpressAPI(("REST API<br/>(Express)"))
+        direction TB
+        ReactApp -- "JSON Requests<br/>(Session Cookie)" ----> ExpressAPI(("REST API<br/>(Express)"))
     end
 
     %% --- SERVER SIDE (Node.js) ---
     subgraph Server_Side ["⚙️ Server (Node.js LTS)"]
         direction TB
         
-        %% Middleware di Auth
-        ExpressAPI --> AuthLayer["<b>Passport.js</b><br/>(Session Strategy)"]
+        %% Anche qui una freccia leggermente più lunga per distanziare il server dalla rete
+        ExpressAPI ---> AuthLayer["<b>Passport.js</b><br/>(Session Strategy)"]
         
         %% Logica di Business
         AuthLayer --> GameCtrl["Game Controller<br/>(Validation & Random)"]
         
         %% Database e Files
-        GameCtrl -- "Query / Transact" --> SQLite[("<br/>&nbsp;&nbsp;SQLite DB&nbsp;&nbsp;<br/>(Users & Matches)<br/>&nbsp;")]
+        GameCtrl -- "Query / Transact" --> SQLite[("SQLite DB<br/>(Users & Matches)")]
         GameCtrl -- "Serve Static" --> Assets[("Card Images<br/>(Public Folder)")]
     end
 
-    %% --- STILI GRAFICI (Dark Mode Friendly) ---
+    %% --- STILI GRAFICI ---
     
-    %% Stile Blu per React (Frontend)
     classDef react fill:#235,stroke:#61dafb,stroke-width:2px,color:#fff;
     class ReactApp,GameState,Router react;
 
-    %% Stile Verde per Node (Backend)
     classDef node fill:#252,stroke:#8c8,stroke-width:2px,color:#fff;
     class AuthLayer,GameCtrl node;
 
-    %% Stile Grigio per Storage
     classDef storage fill:#444,stroke:#888,color:#fff;
     class SQLite,Assets storage;
 
-    %% Stile Trasparente per la rete
-    style Network_Zone fill:transparent,stroke:#666,stroke-dasharray: 5 5,color:#fff;
+    %% TRUCCO PADDING: Aggiunto 'padding:30px' per creare aria intorno alla zona Network
+    style Network_Zone fill:transparent,stroke:#666,stroke-dasharray: 5 5,color:#fff,padding:30px;
 ```
 
 ## How to Run Locally
